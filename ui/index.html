@@ -1,0 +1,2754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VeriTrust — Identity Verification & Fraud Intelligence</title>
+  <meta name="description" content="Open Source Identity Verification & Fraud Intelligence Platform. Secure, fast, configurable." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ═══════════════════════════════════════════════
+       DESIGN TOKENS
+    ═══════════════════════════════════════════════ */
+    :root {
+      --bg-base:      #070b14;
+      --bg-surface:   #0d1424;
+      --bg-elevated:  #111827;
+      --bg-card:      #141e30;
+      --glass:        rgba(255, 255, 255, 0.04);
+      --glass-border: rgba(255, 255, 255, 0.08);
+
+      --primary:      #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.35);
+      --primary-dim:  rgba(99, 102, 241, 0.12);
+      --primary-light:#818cf8;
+
+      --success:      #06d6a0;
+      --success-bg:   rgba(6, 214, 160, 0.1);
+      --warning:      #f59e0b;
+      --warning-bg:   rgba(245, 158, 11, 0.1);
+      --danger:       #ef4444;
+      --danger-bg:    rgba(239, 68, 68, 0.1);
+      --info:         #38bdf8;
+      --info-bg:      rgba(56, 189, 248, 0.1);
+
+      --text-primary:  #f1f5f9;
+      --text-secondary:#94a3b8;
+      --text-muted:    #475569;
+
+      --border:       rgba(255, 255, 255, 0.07);
+      --border-active:rgba(99, 102, 241, 0.5);
+
+      --sidebar-w: 240px;
+      --topbar-h:  64px;
+      --radius:    12px;
+      --radius-lg: 16px;
+      --radius-sm: 8px;
+
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.4);
+      --shadow-glow: 0 0 30px rgba(99,102,241,0.2);
+    }
+
+    /* ═══════════════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+    button { cursor: pointer; font-family: inherit; border: none; outline: none; }
+    input, textarea, select { font-family: inherit; outline: none; }
+    a { text-decoration: none; color: inherit; }
+    code, .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* ═══════════════════════════════════════════════
+       SCROLLBAR
+    ═══════════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+    /* ═══════════════════════════════════════════════
+       AUTH PAGES
+    ═══════════════════════════════════════════════ */
+    #auth-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(99,102,241,0.15) 0%, transparent 60%),
+                  radial-gradient(ellipse 50% 40% at 80% 80%, rgba(6,214,160,0.08) 0%, transparent 50%),
+                  var(--bg-base);
+      padding: 24px;
+    }
+    .auth-box {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: var(--shadow-card), var(--shadow-glow);
+      animation: fadeSlideUp 0.5s ease both;
+    }
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+      justify-content: center;
+    }
+    .auth-logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--success));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      color: white;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+    .auth-logo-text {
+      font-size: 22px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #f1f5f9, var(--primary-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .auth-title { font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+    .auth-subtitle { color: var(--text-secondary); font-size: 14px; margin-bottom: 28px; }
+    .auth-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-elevated);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 28px;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 8px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+    .auth-tab.active {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-dim);
+    }
+    .form-input::placeholder { color: var(--text-muted); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background 0.2s;
+    }
+    .btn:hover::before { background: rgba(255,255,255,0.06); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #4f46e5);
+      color: white;
+      box-shadow: 0 0 20px var(--primary-glow);
+      width: 100%;
+    }
+    .btn-primary:hover { box-shadow: 0 0 30px rgba(99,102,241,0.5); transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-secondary {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+    .btn-success {
+      background: linear-gradient(135deg, var(--success), #059669);
+      color: var(--bg-base);
+      font-weight: 700;
+    }
+    .btn-danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid rgba(239,68,68,0.2);
+    }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: var(--radius-sm);
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    .btn-icon:hover { color: var(--text-primary); border-color: var(--primary); }
+
+    /* ═══════════════════════════════════════════════
+       MAIN LAYOUT
+    ═══════════════════════════════════════════════ */
+    #app { display: none; min-height: 100vh; }
+    #app.visible { display: flex; }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo-icon {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, var(--primary), var(--success));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      color: white;
+      box-shadow: 0 0 14px var(--primary-glow);
+      flex-shrink: 0;
+    }
+    .sidebar-logo-text {
+      font-size: 17px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #f1f5f9, var(--primary-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .sidebar-logo-badge {
+      font-size: 10px;
+      background: var(--primary-dim);
+      color: var(--primary-light);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      margin-left: auto;
+    }
+    .sidebar-section-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      padding: 14px 20px 6px;
+    }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 8px 12px; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.18s;
+      cursor: pointer;
+      position: relative;
+      margin-bottom: 2px;
+    }
+    .nav-item:hover { background: var(--glass); color: var(--text-primary); }
+    .nav-item.active {
+      background: var(--primary-dim);
+      color: var(--primary-light);
+    }
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 60%;
+      background: var(--primary);
+      border-radius: 0 2px 2px 0;
+    }
+    .nav-icon { font-size: 18px; width: 20px; text-align: center; flex-shrink: 0; }
+    .nav-badge {
+      margin-left: auto;
+      font-size: 10px;
+      background: var(--primary);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+    .sidebar-footer {
+      padding: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--glass);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .sidebar-user:hover { border-color: var(--border-active); }
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+    .user-info { flex: 1; overflow: hidden; }
+    .user-name { font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role { font-size: 11px; color: var(--text-muted); }
+
+    /* MAIN CONTENT */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-w);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      height: var(--topbar-h);
+      background: rgba(7, 11, 20, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .topbar-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      flex: 1;
+    }
+    .topbar-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-left: 10px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+      animation: pulse 2s infinite;
+    }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; }
+
+    /* PAGE */
+    .page-content {
+      flex: 1;
+      padding: 28px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    /* ═══════════════════════════════════════════════
+       CARDS
+    ═══════════════════════════════════════════════ */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-card);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .card:hover { border-color: rgba(255,255,255,0.12); }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       STAT CARDS
+    ═══════════════════════════════════════════════ */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+    }
+    .stat-card.primary::before { background: linear-gradient(90deg, var(--primary), transparent); }
+    .stat-card.success::before { background: linear-gradient(90deg, var(--success), transparent); }
+    .stat-card.warning::before { background: linear-gradient(90deg, var(--warning), transparent); }
+    .stat-card.info::before   { background: linear-gradient(90deg, var(--info), transparent); }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+    .stat-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .stat-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .stat-icon.primary { background: var(--primary-dim); }
+    .stat-icon.success { background: var(--success-bg); }
+    .stat-icon.warning { background: var(--warning-bg); }
+    .stat-icon.info    { background: var(--info-bg); }
+    .stat-change {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .stat-change.up   { background: var(--success-bg); color: var(--success); }
+    .stat-change.down { background: var(--danger-bg); color: var(--danger); }
+    .stat-value {
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .stat-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       CHARTS
+    ═══════════════════════════════════════════════ */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .chart-container {
+      position: relative;
+      height: 220px;
+      width: 100%;
+    }
+    canvas { max-width: 100%; display: block; }
+    .period-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-elevated);
+      border-radius: 6px;
+      padding: 3px;
+    }
+    .period-tab {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+    .period-tab.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* GAUGE */
+    .gauge-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+    .gauge-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .gauge-value {
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .gauge-decision {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-top: 6px;
+    }
+    .gauge-legend {
+      display: flex;
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* ═══════════════════════════════════════════════
+       TABLE
+    ═══════════════════════════════════════════════ */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: var(--radius-sm);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead th {
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--glass); }
+    td {
+      padding: 12px 14px;
+      color: var(--text-secondary);
+      vertical-align: middle;
+    }
+    td .td-primary { color: var(--text-primary); font-weight: 500; }
+    .td-mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--primary-light); }
+
+    /* ═══════════════════════════════════════════════
+       BADGES
+    ═══════════════════════════════════════════════ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .badge-success { background: var(--success-bg); color: var(--success); }
+    .badge-warning { background: var(--warning-bg); color: var(--warning); }
+    .badge-danger  { background: var(--danger-bg);  color: var(--danger); }
+    .badge-info    { background: var(--info-bg);    color: var(--info); }
+    .badge-muted   { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+
+    /* ═══════════════════════════════════════════════
+       VERIFICATION FORM
+    ═══════════════════════════════════════════════ */
+    .verify-layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 20px;
+      align-items: start;
+    }
+    .pipeline-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .pipeline-step {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 0;
+      position: relative;
+    }
+    .pipeline-step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 14px;
+      top: 38px;
+      bottom: -10px;
+      width: 2px;
+      background: var(--border);
+    }
+    .pipeline-step.done::after { background: var(--success); }
+    .pipeline-step.running::after { background: linear-gradient(180deg, var(--primary), transparent); }
+    .step-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+      border: 2px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+      transition: all 0.3s;
+      z-index: 1;
+    }
+    .pipeline-step.done .step-dot {
+      background: var(--success-bg);
+      border-color: var(--success);
+      color: var(--success);
+    }
+    .pipeline-step.running .step-dot {
+      background: var(--primary-dim);
+      border-color: var(--primary);
+      color: var(--primary-light);
+      animation: spin 1s linear infinite;
+    }
+    .pipeline-step.error .step-dot {
+      background: var(--danger-bg);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+    .step-info { flex: 1; }
+    .step-name { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+    .step-detail { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .pipeline-step.done .step-name { color: var(--text-primary); }
+
+    /* RESULT CARD */
+    .result-card {
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+      border: 2px solid transparent;
+      transition: all 0.5s;
+    }
+    .result-card.approved { background: var(--success-bg); border-color: rgba(6,214,160,0.3); }
+    .result-card.review   { background: var(--warning-bg); border-color: rgba(245,158,11,0.3); }
+    .result-card.reject   { background: var(--danger-bg);  border-color: rgba(239,68,68,0.3); }
+    .result-icon { font-size: 40px; margin-bottom: 10px; }
+    .result-decision { font-size: 22px; font-weight: 800; }
+    .result-score { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+    .result-reasons { margin-top: 14px; text-align: left; }
+    .reason-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 12px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+    .reason-item:last-child { border-bottom: none; }
+
+    /* ═══════════════════════════════════════════════
+       RISK SCORE BAR
+    ═══════════════════════════════════════════════ */
+    .risk-bar-wrap { margin: 14px 0 0; }
+    .risk-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .risk-bar-track {
+      height: 8px;
+      background: var(--bg-elevated);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .risk-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1s cubic-bezier(0.25, 1, 0.5, 1);
+      background: linear-gradient(90deg, var(--success), var(--warning), var(--danger));
+    }
+
+    /* ═══════════════════════════════════════════════
+       FRAUD RULES
+    ═══════════════════════════════════════════════ */
+    .rule-toggle {
+      width: 38px;
+      height: 22px;
+      border-radius: 11px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .rule-toggle.on {
+      background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 8px var(--primary-glow);
+    }
+    .rule-toggle::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: white;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .rule-toggle.on::after { transform: translateX(16px); }
+
+    /* ═══════════════════════════════════════════════
+       API KEYS
+    ═══════════════════════════════════════════════ */
+    .api-key-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--primary-light);
+    }
+    .api-key-text { flex: 1; letter-spacing: 0.05em; }
+    .copy-btn {
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: var(--primary-dim);
+      color: var(--primary-light);
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .copy-btn:hover { background: var(--primary); color: white; }
+    .copy-btn.copied { background: var(--success-bg); color: var(--success); }
+
+    /* ═══════════════════════════════════════════════
+       MODAL
+    ═══════════════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 11, 20, 0.8);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+      animation: fadeSlideUp 0.3s ease both;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+    .modal-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       TOAST
+    ═══════════════════════════════════════════════ */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      padding: 12px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideInRight 0.3s ease both;
+      min-width: 260px;
+      max-width: 380px;
+    }
+    .toast.success { border-left: 3px solid var(--success); }
+    .toast.error   { border-left: 3px solid var(--danger); }
+    .toast.info    { border-left: 3px solid var(--primary); }
+    .toast-icon { font-size: 16px; flex-shrink: 0; }
+    .toast-msg { flex: 1; line-height: 1.4; }
+
+    /* ═══════════════════════════════════════════════
+       EMPTY STATE
+    ═══════════════════════════════════════════════ */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 24px;
+      text-align: center;
+    }
+    .empty-icon { font-size: 48px; opacity: 0.3; margin-bottom: 14px; }
+    .empty-title { font-size: 16px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+    .empty-desc { font-size: 13px; color: var(--text-muted); max-width: 300px; }
+
+    /* ═══════════════════════════════════════════════
+       LOADER
+    ═══════════════════════════════════════════════ */
+    .loader-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-base);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      flex-direction: column;
+      gap: 20px;
+      transition: opacity 0.5s;
+    }
+    .loader-logo {
+      font-size: 36px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary-light), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .loader-bar {
+      width: 180px;
+      height: 3px;
+      background: var(--bg-elevated);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .loader-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--success));
+      border-radius: 2px;
+      animation: loadProgress 1.5s ease-out forwards;
+    }
+    @keyframes loadProgress { from { width: 0; } to { width: 100%; } }
+
+    /* ═══════════════════════════════════════════════
+       SEARCH & FILTERS
+    ═══════════════════════════════════════════════ */
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0 14px;
+      transition: border-color 0.2s;
+    }
+    .search-bar:focus-within { border-color: var(--primary); }
+    .search-bar span { color: var(--text-muted); font-size: 15px; }
+    .search-bar input {
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 13px;
+      padding: 9px 0;
+      width: 200px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       PAGE-SPECIFIC GRID
+    ═══════════════════════════════════════════════ */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .mb-4  { margin-bottom: 16px; }
+    .mb-6  { margin-bottom: 24px; }
+    .flex  { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .gap-4 { gap: 16px; }
+    .w-full { width: 100%; }
+    .text-xs  { font-size: 12px; }
+    .text-sm  { font-size: 13px; }
+    .text-muted { color: var(--text-muted); }
+    .text-success { color: var(--success); }
+    .text-warning { color: var(--warning); }
+    .text-danger  { color: var(--danger); }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .divider { height: 1px; background: var(--border); margin: 16px 0; }
+    .page-section { margin-bottom: 24px; }
+
+    /* ═══════════════════════════════════════════════
+       ANIMATIONS
+    ═══════════════════════════════════════════════ */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(20px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes countUp { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg-elevated) 25%, rgba(255,255,255,0.05) 50%, var(--bg-elevated) 75%);
+      background-size: 400px 100%;
+      animation: shimmer 1.4s ease infinite;
+      border-radius: 4px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       SETTINGS PAGE
+    ═══════════════════════════════════════════════ */
+    .settings-section { margin-bottom: 28px; }
+    .settings-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row-label { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+    .settings-row-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .charts-grid { grid-template-columns: 1fr; }
+      .verify-layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div class="loader-overlay" id="loader">
+  <div class="loader-logo">⟨VT⟩</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+  <div style="font-size:13px;color:var(--text-muted);">Initializing VeriTrust...</div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     AUTH SCREEN
+═══════════════════════════════════════════════════════════ -->
+<div id="auth-screen" style="display:none;">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">V</div>
+      <div class="auth-logo-text">VeriTrust</div>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</div>
+      <div class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Register</div>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="form-login">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input class="form-input" id="login-email" type="email" placeholder="john@acme.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="login-password" type="password" placeholder="••••••••" />
+      </div>
+      <button class="btn btn-primary" onclick="doLogin()" id="btn-login">
+        <span>Sign In</span>
+      </button>
+      <div style="margin-top:14px; text-align:center;">
+        <span class="text-xs text-muted">No account? </span>
+        <span class="text-xs" style="color:var(--primary-light);cursor:pointer;" onclick="switchAuthTab('register')">Create one →</span>
+      </div>
+      <div style="margin-top:12px;padding:10px 14px;background:var(--primary-dim);border-radius:8px;font-size:12px;color:var(--primary-light);">
+        💡 <strong>Demo credentials:</strong> admin@acme.com / SecurePass123!
+      </div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="form-register" style="display:none;">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input class="form-input" id="reg-name" type="text" placeholder="John Doe" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Organization</label>
+          <input class="form-input" id="reg-org" type="text" placeholder="Acme Corp" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input class="form-input" id="reg-email" type="email" placeholder="john@acme.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="reg-password" type="password" placeholder="Min 8 chars, uppercase, digit" />
+      </div>
+      <button class="btn btn-primary" onclick="doRegister()" id="btn-register">
+        <span>Create Account</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN APP
+═══════════════════════════════════════════════════════════ -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">V</div>
+      <div class="sidebar-logo-text">VeriTrust</div>
+      <span class="sidebar-logo-badge">v0.1</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;color:var(--text-muted);padding:14px 0 6px;text-transform:uppercase;">Main</div>
+      <div class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard')">
+        <span class="nav-icon">⬛</span> Dashboard
+      </div>
+      <div class="nav-item" id="nav-verify" onclick="navigate('verify')">
+        <span class="nav-icon">✅</span> Verification
+      </div>
+      <div class="nav-item" id="nav-history" onclick="navigate('history')">
+        <span class="nav-icon">📋</span> History
+      </div>
+
+      <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;color:var(--text-muted);padding:14px 0 6px;text-transform:uppercase;">Security</div>
+      <div class="nav-item" id="nav-fraud" onclick="navigate('fraud')">
+        <span class="nav-icon">🛡️</span> Fraud Rules
+      </div>
+      <div class="nav-item" id="nav-audit" onclick="navigate('audit')">
+        <span class="nav-icon">📑</span> Audit Logs
+      </div>
+
+      <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;color:var(--text-muted);padding:14px 0 6px;text-transform:uppercase;">Admin</div>
+      <div class="nav-item" id="nav-apikeys" onclick="navigate('apikeys')">
+        <span class="nav-icon">🔑</span> API Keys
+      </div>
+      <div class="nav-item" id="nav-settings" onclick="navigate('settings')">
+        <span class="nav-icon">⚙️</span> Settings
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="sidebar-user">
+        <div class="user-avatar" id="user-avatar-text">JD</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-user-name">John Doe</div>
+          <div class="user-role" id="sidebar-user-role">admin · acme-corp</div>
+        </div>
+        <span style="color:var(--text-muted);font-size:12px;" onclick="doLogout()" title="Logout">⬅️</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div style="flex:1;">
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+      </div>
+      <div class="topbar-actions">
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);">
+          <div class="status-dot"></div>
+          <span id="api-status-text">API Connected</span>
+        </div>
+        <div class="btn-icon" onclick="refreshCurrentPage()" title="Refresh">↻</div>
+        <div class="btn-icon" onclick="navigate('settings')" title="Settings">⚙️</div>
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--success));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;cursor:pointer;" id="topbar-avatar">JD</div>
+      </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <div class="page-content" id="page-content"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   CONFIG & STATE
+═══════════════════════════════════════════════════════════ */
+const API = window.API_BASE || 'http://localhost:8000/api/v1';
+const state = {
+  accessToken: localStorage.getItem('vt_access'),
+  refreshToken: localStorage.getItem('vt_refresh'),
+  user: JSON.parse(localStorage.getItem('vt_user') || 'null'),
+  apiKey: localStorage.getItem('vt_api_key'),
+  currentPage: 'dashboard',
+};
+
+/* Empty stats and data arrays for actual user profiles (no mock data fallback) */
+const DEMO = {
+  stats: { total_verifications:0, approved_count:0, review_count:0, rejected_count:0,
+           approval_rate:0, average_risk_score:0, api_keys_active:0, total_members:0 },
+  history: [],
+  rules: [],
+  keys: [],
+  audit: [],
+  analytics: {
+    data: []
+  }
+};
+
+let apiAvailable = false;
+let chartInstance = null;
+let gaugeChartInstance = null;
+let currentPeriod = '30d';
+
+/* ═══════════════════════════════════════════════════════════
+   API CLIENT
+═══════════════════════════════════════════════════════════ */
+async function apiFetch(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...opts.headers };
+  if (state.accessToken) headers['Authorization'] = `Bearer ${state.accessToken}`;
+  try {
+    const res = await fetch(`${API}${path}`, { ...opts, headers });
+    if (res.status === 401 && state.refreshToken) {
+      await doTokenRefresh();
+      headers['Authorization'] = `Bearer ${state.accessToken}`;
+      return fetch(`${API}${path}`, { ...opts, headers });
+    }
+    return res;
+  } catch (e) {
+    return null; // API unavailable
+  }
+}
+
+async function doTokenRefresh() {
+  const res = await fetch(`${API}/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: state.refreshToken }),
+  }).catch(() => null);
+  if (res && res.ok) {
+    const data = await res.json();
+    state.accessToken = data.access_token;
+    state.refreshToken = data.refresh_token;
+    localStorage.setItem('vt_access', data.access_token);
+    localStorage.setItem('vt_refresh', data.refresh_token);
+  } else {
+    doLogout();
+  }
+}
+
+async function checkAPIHealth() {
+  try {
+    const res = await fetch(`${API}/health`, { signal: AbortSignal.timeout(3000) });
+    apiAvailable = res.ok;
+  } catch { apiAvailable = false; }
+  document.getElementById('api-status-text').textContent = apiAvailable ? 'API Connected' : 'Demo Mode';
+  const dot = document.querySelector('.status-dot');
+  if (!apiAvailable) { dot.style.background = '#f59e0b'; dot.style.boxShadow = '0 0 6px #f59e0b'; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AUTH
+═══════════════════════════════════════════════════════════ */
+function switchAuthTab(tab) {
+  ['login','register'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+    document.getElementById(`form-${t}`).style.display = t === tab ? 'block' : 'none';
+  });
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) { showToast('Please fill in all fields', 'error'); return; }
+
+  const btn = document.getElementById('btn-login');
+  btn.textContent = 'Signing in...';
+  btn.disabled = true;
+
+  let success = false;
+  if (apiAvailable) {
+    const res = await apiFetch('/auth/login', {
+      method: 'POST', body: JSON.stringify({ email, password }),
+    });
+    if (res && res.ok) {
+      const data = await res.json();
+      state.accessToken = data.access_token;
+      state.refreshToken = data.refresh_token;
+      localStorage.setItem('vt_access', data.access_token);
+      localStorage.setItem('vt_refresh', data.refresh_token);
+      // Fetch user
+      const meRes = await apiFetch('/auth/me');
+      if (meRes && meRes.ok) {
+        state.user = await meRes.json();
+        localStorage.setItem('vt_user', JSON.stringify(state.user));
+      }
+      success = true;
+    }
+  } else {
+    // Demo mode
+    if (password.length >= 6) {
+      state.user = { email, full_name: email.split('@')[0].replace(/[\._]/g,' '), role: 'admin', organization_id: 'demo-org' };
+      state.accessToken = 'demo-token';
+      localStorage.setItem('vt_user', JSON.stringify(state.user));
+      success = true;
+    }
+  }
+
+  btn.textContent = 'Sign In'; btn.disabled = false;
+
+  if (success) {
+    showApp();
+  } else {
+    showToast('Invalid credentials', 'error');
+  }
+}
+
+async function doRegister() {
+  const fullName = document.getElementById('reg-name').value.trim();
+  const orgName = document.getElementById('reg-org').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+
+  if (!fullName || !orgName || !email || !password) { showToast('All fields required', 'error'); return; }
+
+  const btn = document.getElementById('btn-register');
+  btn.textContent = 'Creating account...'; btn.disabled = true;
+
+  if (apiAvailable) {
+    const res = await apiFetch('/auth/register', {
+      method: 'POST', body: JSON.stringify({ full_name: fullName, email, password, organization_name: orgName }),
+    });
+    btn.textContent = 'Create Account'; btn.disabled = false;
+    if (res && res.ok) {
+      const data = await res.json();
+      state.accessToken = data.access_token;
+      state.refreshToken = data.refresh_token;
+      localStorage.setItem('vt_access', data.access_token);
+      localStorage.setItem('vt_refresh', data.refresh_token);
+      state.user = { email, full_name: fullName, role: 'admin' };
+      localStorage.setItem('vt_user', JSON.stringify(state.user));
+      showApp();
+      showToast('Account created! Welcome to VeriTrust.', 'success');
+    } else {
+      showToast('Registration failed. Email may already exist.', 'error');
+    }
+  } else {
+    await new Promise(r => setTimeout(r, 800));
+    btn.textContent = 'Create Account'; btn.disabled = false;
+    state.user = { email, full_name: fullName, role: 'admin', organization_id: 'demo-org' };
+    state.accessToken = 'demo-token';
+    localStorage.setItem('vt_user', JSON.stringify(state.user));
+    showApp();
+    showToast('Account created (demo mode)!', 'success');
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('vt_access');
+  localStorage.removeItem('vt_refresh');
+  localStorage.removeItem('vt_user');
+  localStorage.removeItem('vt_api_key');
+  Object.assign(state, { accessToken: null, refreshToken: null, user: null, apiKey: null });
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  showToast('Signed out successfully', 'info');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════════════════════ */
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  const app = document.getElementById('app');
+  app.style.display = 'flex';
+  app.classList.add('visible');
+  updateUserUI();
+  navigate('dashboard');
+}
+
+function updateUserUI() {
+  if (!state.user) return;
+  const initials = (state.user.full_name || state.user.email || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  document.getElementById('sidebar-user-name').textContent = state.user.full_name || state.user.email;
+  document.getElementById('sidebar-user-role').textContent = `${state.user.role || 'user'} · ${state.user.organization_id ? 'org' : 'demo'}`;
+  document.getElementById('user-avatar-text').textContent = initials;
+  document.getElementById('topbar-avatar').textContent = initials;
+  document.getElementById('user-avatar-text').textContent = initials;
+}
+
+function navigate(page) {
+  state.currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const navEl = document.getElementById(`nav-${page}`);
+  if (navEl) navEl.classList.add('active');
+  const titles = {
+    dashboard: 'Dashboard', verify: 'New Verification', history: 'Verification History',
+    fraud: 'Fraud Rules', audit: 'Audit Logs', apikeys: 'API Keys', settings: 'Settings'
+  };
+  document.getElementById('topbar-title').textContent = titles[page] || page;
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  if (gaugeChartInstance) { gaugeChartInstance.destroy(); gaugeChartInstance = null; }
+  renderPage(page);
+}
+
+function refreshCurrentPage() {
+  navigate(state.currentPage);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ROUTER
+═══════════════════════════════════════════════════════════ */
+function renderPage(page) {
+  const pages = {
+    dashboard: renderDashboard,
+    verify: renderVerify,
+    history: renderHistory,
+    fraud: renderFraud,
+    audit: renderAudit,
+    apikeys: renderAPIKeys,
+    settings: renderSettings,
+  };
+  (pages[page] || renderDashboard)();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════════════════════════════ */
+async function renderDashboard() {
+  const pc = document.getElementById('page-content');
+  pc.innerHTML = `
+    <div class="stats-grid" id="stats-grid">
+      ${['','','',''].map(() => `<div class="stat-card"><div class="skeleton" style="height:80px;"></div></div>`).join('')}
+    </div>
+    <div class="charts-grid">
+      <div class="card"><div class="skeleton" style="height:220px;"></div></div>
+      <div class="card"><div class="skeleton" style="height:220px;"></div></div>
+    </div>
+    <div class="card"><div class="skeleton" style="height:200px;"></div></div>
+  `;
+
+  let stats = DEMO.stats;
+  let analytics = DEMO.analytics;
+
+  if (apiAvailable && state.accessToken !== 'demo-token') {
+    const [sRes, aRes] = await Promise.all([
+      apiFetch('/dashboard'),
+      apiFetch('/dashboard/analytics?period=30d'),
+    ]);
+    if (sRes && sRes.ok) stats = await sRes.json();
+    if (aRes && aRes.ok) { const d = await aRes.json(); analytics = d; }
+  }
+
+  pc.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card primary">
+        <div class="stat-header">
+          <div class="stat-icon primary">📊</div>
+          <div class="stat-change up">↑ 12%</div>
+        </div>
+        <div class="stat-value" id="stat-total">0</div>
+        <div class="stat-label">Total Verifications</div>
+        <div class="stat-sub">All time across org</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-header">
+          <div class="stat-icon success">✅</div>
+          <div class="stat-change up">↑ 2.1%</div>
+        </div>
+        <div class="stat-value" id="stat-approval">0%</div>
+        <div class="stat-label">Approval Rate</div>
+        <div class="stat-sub">${stats.approved_count} approved · ${stats.rejected_count} rejected</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="stat-header">
+          <div class="stat-icon warning">⚡</div>
+          <div class="stat-change down">↑ 1.3</div>
+        </div>
+        <div class="stat-value" id="stat-risk">0</div>
+        <div class="stat-label">Avg Risk Score</div>
+        <div class="stat-sub">Lower is better</div>
+      </div>
+      <div class="stat-card info">
+        <div class="stat-header">
+          <div class="stat-icon info">🔑</div>
+          <div class="stat-change up">Active</div>
+        </div>
+        <div class="stat-value" id="stat-keys">0</div>
+        <div class="stat-label">Active API Keys</div>
+        <div class="stat-sub">${stats.total_members} team members</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📈 Verification Trends</div>
+          <div class="period-tabs">
+            <div class="period-tab ${currentPeriod==='7d'?'active':''}" onclick="setPeriod('7d')">7D</div>
+            <div class="period-tab ${currentPeriod==='30d'?'active':''}" onclick="setPeriod('30d')">30D</div>
+            <div class="period-tab ${currentPeriod==='90d'?'active':''}" onclick="setPeriod('90d')">90D</div>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="trends-chart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px;">🎯 Decision Distribution</div>
+        <div class="chart-container">
+          <canvas id="donut-chart"></canvas>
+        </div>
+        <div class="gauge-legend" style="justify-content:center;margin-top:16px;">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--success)"></div>Approved</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div>Review</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div>Rejected</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🕐 Recent Verifications</div>
+        <button class="btn btn-secondary btn-sm" onclick="navigate('history')">View All →</button>
+      </div>
+      <div class="table-wrapper" id="recent-table">
+        <div style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</div>
+      </div>
+    </div>
+  `;
+
+  // Animate counters
+  animateCounter('stat-total', stats.total_verifications);
+  animateCounter('stat-approval', stats.approval_rate, '%', 1);
+  animateCounter('stat-risk', stats.average_risk_score, '', 1);
+  animateCounter('stat-keys', stats.api_keys_active);
+
+  // Trends chart
+  await loadChartJS();
+  renderTrendsChart(analytics.data || DEMO.analytics.data);
+  renderDonutChart(stats.approved_count, stats.review_count, stats.rejected_count);
+
+  // Recent table
+  let history = DEMO.history;
+  if (apiAvailable && state.apiKey) {
+    const res = await fetch(`${API}/verify/history`, { headers: { 'X-Api-Key': state.apiKey } }).catch(() => null);
+    if (res && res.ok) { const d = await res.json(); history = d.data || history; }
+  }
+  renderRecentTable(history.slice(0, 5));
+}
+
+function renderRecentTable(items) {
+  const table = document.getElementById('recent-table');
+  if (!items.length) { table.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No verifications yet</div></div>'; return; }
+  table.innerHTML = `<table>
+    <thead><tr>
+      <th>ID</th><th>Email</th><th>Risk Score</th><th>Decision</th><th>Status</th><th>Time</th>
+    </tr></thead>
+    <tbody>
+    ${items.map(v => `
+      <tr style="cursor:pointer;" onclick="navigate('history')">
+        <td><span class="td-mono">${v.verification_id.slice(0,8)}…</span></td>
+        <td><span class="td-primary">${v.email}</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:60px;height:5px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;">
+              <div style="width:${v.risk_score}%;height:100%;background:${riskColor(v.risk_score)};"></div>
+            </div>
+            <span style="font-size:13px;font-weight:600;color:${riskColor(v.risk_score)};">${v.risk_score}</span>
+          </div>
+        </td>
+        <td>${decisionBadge(v.decision)}</td>
+        <td><span class="badge badge-muted">${v.status}</span></td>
+        <td class="text-muted text-xs">${timeAgo(v.created_at)}</td>
+      </tr>
+    `).join('')}
+    </tbody>
+  </table>`;
+}
+
+function setPeriod(p) { currentPeriod = p; navigate('dashboard'); }
+
+function renderTrendsChart(data) {
+  const ctx = document.getElementById('trends-chart');
+  if (!ctx) return;
+  const labels = data.map(d => d.date);
+  const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 200);
+  gradient.addColorStop(0, 'rgba(99,102,241,0.3)');
+  gradient.addColorStop(1, 'rgba(99,102,241,0.01)');
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Total', data: data.map(d=>d.total), borderColor:'#6366f1', backgroundColor: gradient, tension:0.4, fill:true, borderWidth:2, pointBackgroundColor:'#6366f1', pointRadius:4, pointHoverRadius:6 },
+        { label: 'Approved', data: data.map(d=>d.approved), borderColor:'#06d6a0', backgroundColor:'transparent', tension:0.4, borderWidth:2, pointRadius:0, pointHoverRadius:5 },
+        { label: 'Review', data: data.map(d=>d.review), borderColor:'#f59e0b', backgroundColor:'transparent', tension:0.4, borderWidth:1.5, borderDash:[4,4], pointRadius:0 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { mode:'index', intersect:false, backgroundColor:'rgba(13,20,36,0.95)', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, titleColor:'#f1f5f9', bodyColor:'#94a3b8' } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#475569', font:{ size:11 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#475569', font:{ size:11 } }, beginAtZero:true }
+      },
+      interaction: { mode:'nearest', axis:'x', intersect:false }
+    }
+  });
+}
+
+function renderDonutChart(approved, review, rejected) {
+  const ctx = document.getElementById('donut-chart');
+  if (!ctx) return;
+  gaugeChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Approved', 'Review', 'Rejected'],
+      datasets: [{ data: [approved, review, rejected], backgroundColor: ['#06d6a0','#f59e0b','#ef4444'], borderColor: 'transparent', borderWidth:0, hoverOffset: 8 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '72%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor:'rgba(13,20,36,0.95)', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, titleColor:'#f1f5f9', bodyColor:'#94a3b8' }
+      }
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   VERIFICATION PAGE
+═══════════════════════════════════════════════════════════ */
+function renderVerify() {
+  const pc = document.getElementById('page-content');
+  pc.innerHTML = `
+    <div class="verify-layout">
+      <div>
+        <div class="card mb-4">
+          <div class="card-title" style="margin-bottom:20px;">🔍 Verification Request</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Full Name *</label>
+              <input class="form-input" id="v-name" placeholder="John Doe" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address *</label>
+              <input class="form-input" id="v-email" type="email" placeholder="john@gmail.com" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Phone (E.164)</label>
+              <input class="form-input" id="v-phone" placeholder="+919999999999" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">PAN Number</label>
+              <input class="form-input" id="v-pan" placeholder="ABCDE1234F" maxlength="10" style="text-transform:uppercase;" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">IP Address</label>
+              <input class="form-input" id="v-ip" placeholder="103.44.12.34" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Device ID</label>
+              <input class="form-input" id="v-device" placeholder="device_abc123" />
+            </div>
+          </div>
+          <div style="margin-top:4px;" id="verify-api-key-row">
+            <label class="form-label">API Key (X-Api-Key)</label>
+            <input class="form-input" id="v-apikey" placeholder="vt_live_..." value="${state.apiKey||''}" />
+          </div>
+          <div style="margin-top:18px; display:flex; gap:10px;">
+            <button class="btn btn-primary" style="flex:1;" onclick="submitVerification()" id="btn-verify">
+              ⚡ Run Verification Pipeline
+            </button>
+            <button class="btn btn-secondary" onclick="fillDemo()">Demo Data</button>
+          </div>
+        </div>
+
+        <!-- Result card (hidden initially) -->
+        <div id="result-area" style="display:none;" class="card">
+          <div class="card-title" style="margin-bottom:16px;">📊 Verification Result</div>
+          <div id="result-content"></div>
+        </div>
+      </div>
+
+      <!-- Pipeline sidebar -->
+      <div class="card" style="position:sticky;top:calc(var(--topbar-h) + 28px);">
+        <div class="card-title" style="margin-bottom:16px;">⚙️ Pipeline Status</div>
+        <div class="pipeline-steps" id="pipeline-steps">
+          ${pipelineStepsHTML()}
+        </div>
+        <div class="divider"></div>
+        <div class="text-xs text-muted" style="text-align:center;line-height:1.8;">
+          Processing target: <strong style="color:var(--text-secondary);">&lt;300ms</strong><br>
+          Fraud rules evaluated in real-time
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function pipelineStepsHTML(active = -1, done = []) {
+  const steps = [
+    { name: 'Input Validation', detail: 'Pydantic schema validation' },
+    { name: 'Email Validation', detail: 'Disposable domain detection' },
+    { name: 'Phone Validation', detail: 'E.164 format check' },
+    { name: 'PAN Validation', detail: 'Format: [A-Z]{5}[0-9]{4}[A-Z]' },
+    { name: 'Device Check', detail: 'Redis blacklist lookup' },
+    { name: 'IP Velocity', detail: 'Sliding window counter' },
+    { name: 'Fraud Rules', detail: 'Configurable rule engine' },
+    { name: 'Risk Scoring', detail: 'Aggregate score (0-100)' },
+    { name: 'Decision', detail: 'APPROVED / REVIEW / REJECT' },
+    { name: 'Audit Log', detail: 'Async via Celery' },
+  ];
+  return steps.map((s, i) => {
+    const cls = done.includes(i) ? 'done' : i === active ? 'running' : '';
+    const icon = done.includes(i) ? '✓' : i === active ? '◌' : (i + 1);
+    return `<div class="pipeline-step ${cls}">
+      <div class="step-dot">${icon}</div>
+      <div class="step-info">
+        <div class="step-name">${s.name}</div>
+        <div class="step-detail">${s.detail}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function fillDemo() {
+  document.getElementById('v-name').value = 'Jane Doe';
+  document.getElementById('v-email').value = 'jane@gmail.com';
+  document.getElementById('v-phone').value = '+919876543210';
+  document.getElementById('v-pan').value = 'PQRST5678G';
+  document.getElementById('v-ip').value = '103.44.12.34';
+  document.getElementById('v-device').value = 'device_demo_001';
+}
+
+async function submitVerification() {
+  const name = document.getElementById('v-name').value.trim();
+  const email = document.getElementById('v-email').value.trim();
+  if (!name || !email) { showToast('Name and email are required', 'error'); return; }
+
+  const btn = document.getElementById('btn-verify');
+  btn.disabled = true;
+  btn.textContent = '⏳ Processing...';
+
+  // Animate pipeline
+  await animatePipeline();
+
+  const payload = {
+    name, email,
+    phone: document.getElementById('v-phone').value.trim() || null,
+    pan: document.getElementById('v-pan').value.trim().toUpperCase() || null,
+    ip_address: document.getElementById('v-ip').value.trim() || null,
+    device_id: document.getElementById('v-device').value.trim() || null,
+  };
+
+  let result = null;
+  const apiKey = document.getElementById('v-apikey').value.trim() || state.apiKey;
+
+  if (apiAvailable && apiKey) {
+    const res = await fetch(`${API}/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Api-Key': apiKey },
+      body: JSON.stringify(payload),
+    }).catch(() => null);
+    if (res && res.ok) result = await res.json();
+  }
+
+  // Generate demo result if API unavailable
+  if (!result) {
+    result = generateDemoResult(payload);
+    if (apiKey) state.apiKey = apiKey;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '⚡ Run Verification Pipeline';
+
+  showVerificationResult(result);
+}
+
+function generateDemoResult(payload) {
+  let score = 0;
+  const reasons = [];
+  const DISPOSABLE_DOMAINS = ['mailinator.com','guerrillamail.com','yopmail.com','10minutemail.com','temp-mail.org','throwam.com'];
+  const emailDomain = payload.email?.split('@')[1] || '';
+  if (DISPOSABLE_DOMAINS.includes(emailDomain)) { score += 25; reasons.push('Disposable email provider detected'); }
+  if (payload.pan && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(payload.pan)) { score += 20; reasons.push('Invalid PAN format'); }
+  if (!payload.phone) { /* no penalty */ } else if (!/^\+[1-9]\d{6,14}$/.test(payload.phone)) { score += 10; reasons.push('Invalid phone format'); }
+  score = Math.min(100, score);
+  const decision = score <= 30 ? 'APPROVED' : score <= 60 ? 'REVIEW' : 'REJECT';
+  return {
+    verification_id: crypto.randomUUID ? crypto.randomUUID() : '550e8400-e29b-41d4-a716-'+Math.random().toString(36).slice(2,14),
+    risk_score: score,
+    decision,
+    reasons,
+    processing_ms: Math.floor(Math.random() * 180 + 40),
+    created_at: new Date().toISOString(),
+  };
+}
+
+async function animatePipeline() {
+  const steps = [0,1,2,3,4,5,6,7,8,9];
+  const done = [];
+  for (const i of steps) {
+    document.getElementById('pipeline-steps').innerHTML = pipelineStepsHTML(i, [...done]);
+    await sleep(100 + Math.random() * 80);
+    done.push(i);
+  }
+  document.getElementById('pipeline-steps').innerHTML = pipelineStepsHTML(-1, done);
+}
+
+function showVerificationResult(result) {
+  const area = document.getElementById('result-area');
+  area.style.display = 'block';
+  area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  const decMap = {
+    'APPROVED': { cls:'approved', icon:'✅', color: 'var(--success)' },
+    'REVIEW':   { cls:'review',   icon:'⚠️', color: 'var(--warning)' },
+    'REJECT':   { cls:'reject',   icon:'❌', color: 'var(--danger)' },
+  };
+  const d = decMap[result.decision] || decMap['REVIEW'];
+
+  document.getElementById('result-content').innerHTML = `
+    <div class="result-card ${d.cls}" style="animation:fadeSlideUp 0.4s ease;">
+      <div class="result-icon">${d.icon}</div>
+      <div class="result-decision" style="color:${d.color};">${result.decision}</div>
+      <div class="result-score">Risk Score: <strong>${result.risk_score}/100</strong> · ${result.processing_ms}ms</div>
+      <div class="risk-bar-wrap">
+        <div class="risk-bar-track"><div class="risk-bar-fill" style="width:${result.risk_score}%"></div></div>
+      </div>
+      ${result.reasons && result.reasons.length ? `
+      <div class="result-reasons">
+        <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">TRIGGERED RULES</div>
+        ${result.reasons.map(r => `<div class="reason-item">⚡ ${r}</div>`).join('')}
+      </div>` : '<div style="margin-top:12px;font-size:13px;color:var(--text-muted);">No fraud signals detected</div>'}
+    </div>
+    <div style="margin-top:14px;display:flex;gap:8px;justify-content:space-between;align-items:center;">
+      <span class="text-xs text-muted font-mono">ID: ${result.verification_id.slice(0,20)}…</span>
+      <button class="btn btn-secondary btn-sm" onclick="navigate('history')">View History →</button>
+    </div>
+  `;
+  showToast(`Verification ${result.decision} · Score: ${result.risk_score}`, result.decision === 'APPROVED' ? 'success' : result.decision === 'REVIEW' ? 'info' : 'error');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HISTORY
+═══════════════════════════════════════════════════════════ */
+async function renderHistory() {
+  const pc = document.getElementById('page-content');
+  pc.innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 Verification History</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div class="search-bar">
+            <span>🔍</span>
+            <input placeholder="Search by email…" oninput="filterHistory(this.value)" id="history-search" />
+          </div>
+          <select class="form-input" style="width:130px;padding:9px 12px;" onchange="filterByDecision(this.value)">
+            <option value="">All decisions</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REVIEW">Review</option>
+            <option value="REJECT">Rejected</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrapper" id="history-table-wrap">
+        <div style="text-align:center;padding:40px;color:var(--text-muted);">Loading…</div>
+      </div>
+      <div id="history-pagination" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0 0;font-size:13px;color:var(--text-muted);"></div>
+    </div>`;
+
+  let items = [...DEMO.history];
+  if (apiAvailable && state.apiKey) {
+    const res = await fetch(`${API}/verify/history`, { headers: { 'X-Api-Key': state.apiKey } }).catch(() => null);
+    if (res && res.ok) { const d = await res.json(); items = d.data || items; }
+  }
+  window._historyItems = items;
+  renderHistoryTable(items);
+}
+
+function filterHistory(q) {
+  const filtered = window._historyItems.filter(i => i.email.toLowerCase().includes(q.toLowerCase()));
+  renderHistoryTable(filtered);
+}
+
+function filterByDecision(dec) {
+  const filtered = dec ? window._historyItems.filter(i => i.decision === dec) : window._historyItems;
+  renderHistoryTable(filtered);
+}
+
+function renderHistoryTable(items) {
+  const wrap = document.getElementById('history-table-wrap');
+  if (!items.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">No verifications found</div><div class="empty-desc">Submit a verification request to see results here.</div></div>`;
+    return;
+  }
+  wrap.innerHTML = `<table>
+    <thead><tr><th>Verification ID</th><th>Email</th><th>Risk Score</th><th>Decision</th><th>Status</th><th>Created</th><th></th></tr></thead>
+    <tbody>
+    ${items.map(v => `
+      <tr>
+        <td><span class="td-mono">${v.verification_id.slice(0,8)}…</span></td>
+        <td><span class="td-primary">${v.email}</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:70px;height:5px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;">
+              <div style="width:${v.risk_score}%;height:100%;background:${riskColor(v.risk_score)};border-radius:3px;"></div>
+            </div>
+            <span style="color:${riskColor(v.risk_score)};font-weight:600;">${v.risk_score}</span>
+          </div>
+        </td>
+        <td>${decisionBadge(v.decision)}</td>
+        <td><span class="badge badge-muted">${v.status}</span></td>
+        <td class="text-xs text-muted">${timeAgo(v.created_at)}</td>
+        <td><button class="btn btn-secondary btn-sm" onclick="showVerificationDetail('${v.verification_id}','${v.email}',${v.risk_score},'${v.decision}')">View</button></td>
+      </tr>
+    `).join('')}
+    </tbody>
+  </table>`;
+  document.getElementById('history-pagination').innerHTML = `
+    <span>Showing ${items.length} of ${window._historyItems.length} records</span>
+    <div style="display:flex;gap:6px;">
+      <button class="btn btn-secondary btn-sm" disabled>← Prev</button>
+      <button class="btn btn-secondary btn-sm" style="background:var(--primary-dim);color:var(--primary-light);">1</button>
+      <button class="btn btn-secondary btn-sm">Next →</button>
+    </div>
+  `;
+}
+
+function showVerificationDetail(id, email, score, decision) {
+  const d = { 'APPROVED':'success', 'REVIEW':'warning', 'REJECT':'danger' }[decision] || 'muted';
+  showModal(`
+    <div class="modal-title">Verification Detail</div>
+    <div class="modal-subtitle font-mono" style="font-size:12px;">${id}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div><div class="form-label">Email</div><div class="td-primary">${email}</div></div>
+      <div><div class="form-label">Decision</div>${decisionBadge(decision)}</div>
+      <div><div class="form-label">Risk Score</div><div style="font-size:22px;font-weight:800;color:${riskColor(score)};">${score}/100</div></div>
+      <div><div class="form-label">Status</div><span class="badge badge-muted">completed</span></div>
+    </div>
+    <div class="risk-bar-wrap">
+      <div class="risk-bar-label"><span>Low Risk</span><span>High Risk</span></div>
+      <div class="risk-bar-track"><div class="risk-bar-fill" style="width:${score}%"></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FRAUD RULES
+═══════════════════════════════════════════════════════════ */
+async function renderFraud() {
+  const pc = document.getElementById('page-content');
+  pc.innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🛡️ Fraud Rules Engine</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary btn-sm" onclick="showSimulate()">🧪 Simulate</button>
+          <button class="btn btn-primary btn-sm" onclick="showCreateRule()">+ New Rule</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;" id="rule-stats"></div>
+      <div class="table-wrapper" id="rules-table">
+        <div style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</div>
+      </div>
+    </div>`;
+
+  let rules = [...DEMO.rules];
+  if (apiAvailable && state.accessToken !== 'demo-token') {
+    const res = await apiFetch('/fraud/rules');
+    if (res && res.ok) rules = await res.json();
+  }
+  window._fraudRules = rules;
+  renderRuleStats(rules);
+  renderRulesTable(rules);
+}
+
+function renderRuleStats(rules) {
+  const active = rules.filter(r => r.is_active).length;
+  const maxScore = rules.reduce((s, r) => s + (r.is_active ? r.score_impact : 0), 0);
+  document.getElementById('rule-stats').innerHTML = `
+    <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:14px;">
+      <div style="font-size:22px;font-weight:800;color:var(--primary-light);">${rules.length}</div>
+      <div class="text-xs text-muted">Total Rules</div>
+    </div>
+    <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:14px;">
+      <div style="font-size:22px;font-weight:800;color:var(--success);">${active}</div>
+      <div class="text-xs text-muted">Active Rules</div>
+    </div>
+    <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:14px;">
+      <div style="font-size:22px;font-weight:800;color:var(--danger);">${maxScore}</div>
+      <div class="text-xs text-muted">Max Score Impact</div>
+    </div>
+    <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:14px;">
+      <div style="font-size:22px;font-weight:800;color:var(--warning);">${rules.filter(r=>r.is_active).reduce((s,r)=>s+r.score_impact,0)}</div>
+      <div class="text-xs text-muted">Active Score Sum</div>
+    </div>
+  `;
+}
+
+const ruleTypeColors = {email:'info',document:'warning',phone:'primary',device:'danger',velocity:'warning',geo:'success'};
+
+function renderRulesTable(rules) {
+  document.getElementById('rules-table').innerHTML = `
+    <table>
+      <thead><tr><th>Rule</th><th>Type</th><th>Score Impact</th><th>Description</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+      ${rules.map((r,i) => `
+        <tr>
+          <td><span class="td-primary font-mono" style="font-size:12px;">${r.rule_name}</span></td>
+          <td><span class="badge badge-${ruleTypeColors[r.rule_type]||'muted'}">${r.rule_type}</span></td>
+          <td><span style="font-size:16px;font-weight:700;color:${r.score_impact>=25?'var(--danger)':r.score_impact>=15?'var(--warning)':'var(--success)'};">+${r.score_impact}</span></td>
+          <td class="text-sm text-muted">${r.description}</td>
+          <td>
+            <div class="rule-toggle ${r.is_active?'on':''}" onclick="toggleRule(${i})" id="toggle-${i}"></div>
+          </td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-secondary btn-sm" onclick="editRule(${i})">Edit</button>
+              ${r.organization_id ? `<button class="btn btn-danger btn-sm" onclick="deleteRule('${r.id}',${i})">Del</button>` : ''}
+            </div>
+          </td>
+        </tr>
+      `).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function toggleRule(idx) {
+  const rule = window._fraudRules[idx];
+  const originalState = rule.is_active;
+  rule.is_active = !rule.is_active;
+
+  if (apiAvailable && state.accessToken !== 'demo-token') {
+    const res = await apiFetch(`/fraud/rules/${rule.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        description: rule.description,
+        score_impact: rule.score_impact,
+        is_active: rule.is_active
+      })
+    });
+    if (!res || !res.ok) {
+      rule.is_active = originalState;
+      if (res && res.status === 400) {
+        showToast('Cannot modify global/system rules', 'error');
+      } else {
+        showToast('Failed to update rule on backend', 'error');
+      }
+    } else {
+      showToast(`Rule ${rule.is_active ? 'enabled' : 'disabled'} on backend`, 'success');
+    }
+  } else {
+    showToast(`Rule ${rule.is_active ? 'enabled' : 'disabled'} (Demo Mode)`, 'info');
+  }
+
+  renderRuleStats(window._fraudRules);
+  renderRulesTable(window._fraudRules);
+}
+
+function showCreateRule() {
+  showModal(`
+    <div class="modal-title">Create Fraud Rule</div>
+    <div class="modal-subtitle">Add a custom rule for your organization</div>
+    <div class="form-group">
+      <label class="form-label">Rule Name</label>
+      <input class="form-input" id="nr-name" placeholder="e.g., vpn_detected" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Rule Type</label>
+        <select class="form-input" id="nr-type">
+          <option value="email">email</option>
+          <option value="phone">phone</option>
+          <option value="document">document</option>
+          <option value="device">device</option>
+          <option value="velocity">velocity</option>
+          <option value="geo">geo</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Score Impact (0-100)</label>
+        <input class="form-input" id="nr-score" type="number" min="0" max="100" placeholder="20" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input class="form-input" id="nr-desc" placeholder="Describe what this rule detects" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" style="width:auto;" onclick="createRule()">Create Rule</button>
+    </div>
+  `);
+}
+
+async function createRule() {
+  const name = document.getElementById('nr-name').value.trim();
+  const type = document.getElementById('nr-type').value;
+  const score = parseInt(document.getElementById('nr-score').value);
+  const desc = document.getElementById('nr-desc').value.trim();
+  if (!name || isNaN(score)) { showToast('Fill all fields', 'error'); return; }
+  closeModal();
+  let rule = { id: 'r'+Date.now(), rule_name: name, rule_type: type, description: desc, score_impact: score, is_active: true, organization_id: 'demo' };
+  
+  if (apiAvailable && state.accessToken !== 'demo-token') {
+    const res = await apiFetch('/fraud/rules', {
+      method: 'POST',
+      body: JSON.stringify({
+        rule_name: name,
+        rule_type: type,
+        description: desc,
+        score_impact: score,
+        is_active: true
+      })
+    });
+    if (res && res.ok) {
+      rule = await res.json();
+      showToast('Fraud rule created on backend', 'success');
+      renderFraud();
+      return;
+    } else {
+      showToast('Failed to create rule on backend', 'error');
+    }
+  } else {
+    showToast('Fraud rule created (Demo Mode)', 'success');
+  }
+
+  window._fraudRules.push(rule);
+  renderRuleStats(window._fraudRules);
+  renderRulesTable(window._fraudRules);
+}
+
+function editRule(idx) {
+  const r = window._fraudRules[idx];
+  showModal(`
+    <div class="modal-title">Edit Rule: ${r.rule_name}</div>
+    <div class="form-group">
+      <label class="form-label">Score Impact</label>
+      <input class="form-input" id="er-score" type="number" value="${r.score_impact}" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input class="form-input" id="er-desc" value="${r.description}" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" style="width:auto;" onclick="saveRule(${idx})">Save Changes</button>
+    </div>
+  `);
+}
+
+async function saveRule(idx) {
+  const score = parseInt(document.getElementById('er-score').value);
+  const desc = document.getElementById('er-desc').value;
+  closeModal();
+  const rule = window._fraudRules[idx];
+  const oldScore = rule.score_impact;
+  const oldDesc = rule.description;
+  rule.score_impact = score;
+  rule.description = desc;
+
+  if (apiAvailable && state.accessToken !== 'demo-token') {
+    const res = await apiFetch(`/fraud/rules/${rule.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        description: desc,
+        score_impact: score,
+        is_active: rule.is_active
+      })
+    });
+    if (res && res.ok) {
+      showToast('Rule updated on backend', 'success');
+    } else {
+      rule.score_impact = oldScore;
+      rule.description = oldDesc;
+      showToast('Failed to update rule on backend', 'error');
+    }
+  } else {
+    showToast('Rule updated (Demo Mode)', 'success');
+  }
+
+  renderRuleStats(window._fraudRules);
+  renderRulesTable(window._fraudRules);
+}
+
+async function deleteRule(id, idx) {
+  if (apiAvailable && state.accessToken !== 'demo-token') {
+    const res = await apiFetch(`/fraud/rules/${id}`, {
+      method: 'DELETE'
+    });
+    if (res && res.ok) {
+      window._fraudRules.splice(idx, 1);
+      showToast('Rule deleted from backend', 'success');
+    } else {
+      showToast('Failed to delete rule from backend', 'error');
+    }
+  } else {
+    window._fraudRules.splice(idx, 1);
+    showToast('Rule deleted (Demo Mode)', 'info');
+  }
+
+  renderRuleStats(window._fraudRules);
+  renderRulesTable(window._fraudRules);
+}
+
+function showSimulate() {
+  showModal(`
+    <div class="modal-title">🧪 Fraud Simulator</div>
+    <div class="modal-subtitle">Test your rules without creating a real verification record</div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" id="sim-email" placeholder="test@mailinator.com" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">PAN</label>
+        <input class="form-input" id="sim-pan" placeholder="ABCDE1234F" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input class="form-input" id="sim-phone" placeholder="+919999999999" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+      <button class="btn btn-primary" style="width:auto;" onclick="runSimulate()">Run Simulation</button>
+    </div>
+  `);
+}
+
+async function runSimulate() {
+  const email = document.getElementById('sim-email').value.trim();
+  const pan = document.getElementById('sim-pan').value.trim();
+  const phone = document.getElementById('sim-phone').value.trim();
+  if (!email) { showToast('Email is required', 'error'); return; }
+
+  let result = null;
+  if (apiAvailable && state.accessToken !== 'demo-token') {
+    const res = await apiFetch('/fraud/simulate', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: 'Simulation User',
+        email,
+        pan: pan || null,
+        phone: phone || null,
+      })
+    });
+    if (res && res.ok) {
+      result = await res.json();
+    }
+  }
+
+  if (!result) {
+    result = generateDemoResult({ email, pan, phone });
+  }
+
+  closeModal();
+  showToast(`Simulation: ${result.decision} · Score ${result.risk_score}`, result.decision === 'APPROVED' ? 'success' : 'info');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   API KEYS
+═══════════════════════════════════════════════════════════ */
+async function renderAPIKeys() {
+  const pc = document.getElementById('page-content');
+  pc.innerHTML = `
+    <div class="card mb-4">
+      <div class="card-header">
+        <div class="card-title">🔑 API Keys</div>
+        <button class="btn btn-primary btn-sm" onclick="showCreateKey()">+ Create Key</button>
+      </div>
+      <div style="background:var(--primary-dim);border:1px solid rgba(99,102,241,0.2);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:var(--primary-light);">
+        ⚠️ API keys are shown <strong>once only</strong> at creation time. Store them securely.
+        Use the <code style="font-family:monospace;background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;">X-Api-Key</code> header for verification endpoints.
+      </div>
+      <div id="keys-list">
+        <div style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:16px;">📖 Usage Example</div>
+      <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.8;color:var(--text-secondary);">
+        <span style="color:var(--text-muted)"># Submit a verification request</span><br>
+        curl -X POST <span style="color:var(--success)">http://localhost:8000/api/v1/verify</span> \\<br>
+        &nbsp;&nbsp;-H <span style="color:var(--warning)">"X-Api-Key: vt_live_your_key_here"</span> \\<br>
+        &nbsp;&nbsp;-H <span style="color:var(--warning)">"Content-Type: application/json"</span> \\<br>
+        &nbsp;&nbsp;-d <span style="color:var(--info)">'{"name":"John","email":"john@gmail.com","pan":"ABCDE1234F"}'</span>
+      </div>
+    </div>`;
+
+  let keys = [...DEMO.keys];
+  if (apiAvailable && state.accessToken !== 'demo-token') {
+    const res = await apiFetch('/apikeys');
+    if (res && res.ok) keys = await res.json();
+  }
+  window._apiKeys = keys;
+  renderKeysList(keys);
+}
+
+function renderKeysList(keys) {
+  const wrap = document.getElementById('keys-list');
+  if (!keys.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">🔑</div><div class="empty-title">No API keys yet</div><div class="empty-desc">Create your first API key to start submitting verification requests.</div></div>`;
+    return;
+  }
+  wrap.innerHTML = keys.map((k, i) => `
+    <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;background:var(--bg-elevated);${!k.is_active?'opacity:0.5;':''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--text-primary);">${k.name}</div>
+          <div class="text-xs text-muted">Created ${timeAgo(k.created_at)} · Last used: ${k.last_used_at ? timeAgo(k.last_used_at) : 'Never'}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          ${k.is_active ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-muted">Revoked</span>'}
+          ${k.is_active ? `<button class="btn btn-danger btn-sm" onclick="revokeKey('${k.id}',${i})">Revoke</button>` : ''}
+        </div>
+      </div>
+      <div class="api-key-display">
+        <span class="api-key-text" id="key-display-${i}">${k.key_prefix}••••••••••••••••••••</span>
+        <button class="copy-btn" onclick="copyKey('${k.key_prefix}',${i})">Copy Prefix</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function copyKey(prefix, i) {
+  navigator.clipboard.writeText(prefix).catch(() => {});
+  const btn = document.querySelectorAll('.copy-btn')[i];
+  if (btn) { btn.textContent = 'Copied!'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'Copy Prefix'; btn.classList.remove('copied'); }, 2000); }
+  showToast('Key prefix copied to clipboard', 'success');
+}
+
+function showCreateKey() {
+  showModal(`
+    <div class="modal-title">Create API Key</div>
+    <div class="modal-subtitle">Generate a new key for your organization. The full secret is shown once.</div>
+    <div class="form-group">
+      <label class="form-label">Key Name</label>
+      <input class="form-input" id="nk-name" placeholder="e.g., Production Key" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" style="width:auto;" onclick="createKey()">Generate Key</button>
+    </div>
+  `);
+}
+
+async function createKey() {
+  const name = document.getElementById('nk-name').value.trim();
+  if (!name) { showToast('Enter a key name', 'error'); return; }
+  closeModal();
+
+  let newKey = null;
+  if (apiAvailable && state.accessToken !== 'demo-token') {
+    const res = await apiFetch('/apikeys', { method: 'POST', body: JSON.stringify({ name, permissions: {} }) });
+    if (res && res.ok) newKey = await res.json();
+  }
+
+  if (!newKey) {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const rnd = Array.from({length:40}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+    const full = `vt_live_${rnd}`;
+    newKey = { id: 'k'+Date.now(), name, key: full, key_prefix: full.slice(0,12), created_at: new Date().toISOString(), is_active: true };
+  }
+
+  state.apiKey = newKey.key;
+  localStorage.setItem('vt_api_key', newKey.key);
+
+  showModal(`
+    <div class="modal-title">🎉 API Key Created</div>
+    <div style="background:var(--success-bg);border:1px solid rgba(6,214,160,0.2);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--success);">
+      ⚠️ Copy this key now — it will <strong>not</strong> be shown again.
+    </div>
+    <div class="form-label">Your API Key</div>
+    <div class="api-key-display" style="margin-bottom:16px;">
+      <span class="api-key-text font-mono" id="new-key-val">${newKey.key || newKey.key_prefix+'...'}</span>
+      <button class="copy-btn" onclick="copyNewKey('${newKey.key || ''}')">Copy</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" style="width:auto;" onclick="closeModal();renderAPIKeys();">Done</button>
+    </div>
+  `);
+  window._apiKeys.push({ ...newKey, last_used_at: null });
+}
+
+function copyNewKey(key) {
+  navigator.clipboard.writeText(key).catch(() => {});
+  document.querySelector('#new-key-val')?.parentElement?.querySelector('.copy-btn').classList.add('copied');
+  showToast('Key copied!', 'success');
+}
+
+async function revokeKey(id, i) {
+  if (!confirm('Revoke this API key? Any services using it will stop working immediately.')) return;
+
+  if (apiAvailable && state.accessToken !== 'demo-token') {
+    const res = await apiFetch(`/apikeys/${id}`, { method: 'DELETE' });
+    if (res && res.ok) {
+      window._apiKeys[i].is_active = false;
+      showToast('API key revoked on backend', 'success');
+    } else {
+      showToast('Failed to revoke API key on backend', 'error');
+    }
+  } else {
+    window._apiKeys[i].is_active = false;
+    showToast('API key revoked (Demo Mode)', 'info');
+  }
+  renderKeysList(window._apiKeys);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AUDIT LOGS
+═══════════════════════════════════════════════════════════ */
+async function renderAudit() {
+  const pc = document.getElementById('page-content');
+  pc.innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📑 Audit Logs</div>
+        <div class="search-bar">
+          <span>🔍</span>
+          <input placeholder="Filter by action…" oninput="filterAudit(this.value)" />
+        </div>
+      </div>
+      <div class="table-wrapper" id="audit-table">
+        <div style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</div>
+      </div>
+    </div>`;
+
+  let logs = [...DEMO.audit];
+  if (apiAvailable && state.accessToken !== 'demo-token') {
+    const res = await apiFetch('/audit');
+    if (res && res.ok) { const d = await res.json(); logs = d.data || logs; }
+  }
+  window._auditLogs = logs;
+  renderAuditTable(logs);
+}
+
+function filterAudit(q) {
+  const filtered = window._auditLogs.filter(l => l.action.includes(q.toLowerCase()) || (l.actor_email||'').includes(q));
+  renderAuditTable(filtered);
+}
+
+const actionColors = { 'auth.login':'info', 'verification.completed':'success', 'apikey.created':'primary', 'auth.logout':'muted' };
+
+function renderAuditTable(logs) {
+  const wrap = document.getElementById('audit-table');
+  if (!logs.length) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">No audit events</div></div>';
+    return;
+  }
+  wrap.innerHTML = `<table>
+    <thead><tr><th>Timestamp</th><th>Action</th><th>Actor</th><th>Endpoint</th><th>Method</th><th>IP</th><th>Status</th></tr></thead>
+    <tbody>
+    ${logs.map(l => `
+      <tr>
+        <td class="text-xs text-muted font-mono">${timeAgo(l.created_at)}</td>
+        <td><span class="badge badge-${actionColors[l.action]||'muted'}">${l.action}</span></td>
+        <td class="td-primary text-sm">${l.actor_email || '—'}</td>
+        <td class="font-mono" style="font-size:11px;color:var(--text-muted);">${l.endpoint || '—'}</td>
+        <td><span class="badge badge-muted">${l.method || '—'}</span></td>
+        <td class="font-mono text-xs text-muted">${l.ip_address || '—'}</td>
+        <td><span class="badge badge-${l.status==='success'?'success':'danger'}">${l.status}</span></td>
+      </tr>
+    `).join('')}
+    </tbody>
+  </table>`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SETTINGS
+═══════════════════════════════════════════════════════════ */
+function renderSettings() {
+  const pc = document.getElementById('page-content');
+  pc.innerHTML = `
+    <div class="grid-2" style="gap:20px;align-items:start;">
+      <div>
+        <div class="card mb-4">
+          <div class="card-title" style="margin-bottom:20px;">👤 Profile</div>
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input class="form-input" value="${state.user?.full_name||''}" id="set-name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" value="${state.user?.email||''}" disabled style="opacity:0.6;" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Role</label>
+            <input class="form-input" value="${state.user?.role||'admin'}" disabled style="opacity:0.6;" />
+          </div>
+          <button class="btn btn-primary" onclick="showToast('Profile updated','success')">Save Profile</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:20px;">🔗 API Connection</div>
+          <div class="form-group">
+            <label class="form-label">Backend URL</label>
+            <input class="form-input font-mono" id="set-api-url" value="${API}" placeholder="http://localhost:8000/api/v1" />
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;margin-top:4px;">
+            <div class="status-dot" style="${apiAvailable?'':'background:var(--warning);box-shadow:0 0 6px var(--warning);'}"></div>
+            <span class="text-xs text-muted">${apiAvailable?'Connected to backend':'Backend not reachable — running in demo mode'}</span>
+          </div>
+          <button class="btn btn-secondary" style="margin-top:12px;" onclick="retestAPI()">Test Connection</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="card mb-4">
+          <div class="card-title" style="margin-bottom:20px;">🛡️ Security</div>
+          <div class="settings-section">
+            <div class="settings-row">
+              <div>
+                <div class="settings-row-label">Refresh Token Rotation</div>
+                <div class="settings-row-desc">Each refresh issues a new token pair</div>
+              </div>
+              <div class="rule-toggle on"></div>
+            </div>
+            <div class="settings-row">
+              <div>
+                <div class="settings-row-label">Rate Limiting</div>
+                <div class="settings-row-desc">100 req/min per API key</div>
+              </div>
+              <div class="rule-toggle on"></div>
+            </div>
+            <div class="settings-row">
+              <div>
+                <div class="settings-row-label">Audit Logging</div>
+                <div class="settings-row-desc">Log all API actions async</div>
+              </div>
+              <div class="rule-toggle on"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:20px;padding:16px;background:var(--danger-bg);border:1px solid rgba(239,68,68,0.2);border-radius:10px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:14px;font-weight:600;">Sign Out</div>
+        <div class="text-xs text-muted">Revokes your session token</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="doLogout()">Sign Out</button>
+    </div>
+  `;
+}
+
+async function retestAPI() {
+  showToast('Testing connection…', 'info');
+  await checkAPIHealth();
+  showToast(apiAvailable ? 'API is reachable ✓' : 'API not reachable — demo mode', apiAvailable ? 'success' : 'error');
+  renderSettings();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL / TOAST
+═══════════════════════════════════════════════════════════ */
+function showModal(html) {
+  document.getElementById('modal-content').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if (e.target.id === 'modal-overlay') closeModal();
+});
+
+let _toastCount = 0;
+function showToast(msg, type = 'info') {
+  const icons = { success:'✅', error:'❌', info:'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${icons[type]||'ℹ️'}</span><span class="toast-msg">${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateX(20px)'; el.style.transition='all 0.3s'; setTimeout(() => el.remove(), 300); }, 3500);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHART.JS LOADER
+═══════════════════════════════════════════════════════════ */
+let chartJSLoaded = false;
+async function loadChartJS() {
+  if (chartJSLoaded || window.Chart) { chartJSLoaded = true; return; }
+  await new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+    s.onload = () => { chartJSLoaded = true; resolve(); };
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════════ */
+function riskColor(score) {
+  if (score <= 30) return 'var(--success)';
+  if (score <= 60) return 'var(--warning)';
+  return 'var(--danger)';
+}
+
+function decisionBadge(d) {
+  const map = { APPROVED: 'success', REVIEW: 'warning', REJECT: 'danger' };
+  return `<span class="badge badge-${map[d]||'muted'}">${d}</span>`;
+}
+
+function timeAgo(iso) {
+  if (!iso) return '—';
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h/24)}d ago`;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function animateCounter(id, target, suffix = '', decimals = 0) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const duration = 1200;
+  const start = Date.now();
+  const update = () => {
+    const progress = Math.min((Date.now() - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const value = target * eased;
+    el.textContent = (decimals > 0 ? value.toFixed(decimals) : Math.floor(value)) + suffix;
+    if (progress < 1) requestAnimationFrame(update);
+  };
+  requestAnimationFrame(update);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════ */
+async function init() {
+  // Show loader
+  await sleep(1200);
+
+  // Check API
+  await checkAPIHealth();
+
+  // Hide loader
+  const loader = document.getElementById('loader');
+  loader.style.opacity = '0';
+  setTimeout(() => loader.remove(), 500);
+
+  // Show auth or app
+  if (state.accessToken && state.user) {
+    showApp();
+  } else {
+    document.getElementById('auth-screen').style.display = 'flex';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
