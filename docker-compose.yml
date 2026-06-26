@@ -1,0 +1,180 @@
+services:
+  # ─── API ──────────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: veritrust_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://veritrust:veritrust@postgres:5432/veritrust
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - AWS_ENDPOINT_URL=http://host.docker.internal:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+      - S3_BUCKET_NAME=veritrust-docs
+      - MAILPIT_HOST=mailpit
+      - MAILPIT_PORT=1025
+      - SECRET_KEY=${SECRET_KEY:-supersecretkey-change-in-production-min-32chars}
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - .:/app
+    networks:
+      - veritrust_net
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # ─── Celery Worker ────────────────────────────────────────────────────────
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: veritrust_worker
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://veritrust:veritrust@postgres:5432/veritrust
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - AWS_ENDPOINT_URL=http://host.docker.internal:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+      - S3_BUCKET_NAME=veritrust-docs
+      - MAILPIT_HOST=mailpit
+      - MAILPIT_PORT=1025
+      - SECRET_KEY=${SECRET_KEY:-supersecretkey-change-in-production-min-32chars}
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - .:/app
+    networks:
+      - veritrust_net
+    restart: unless-stopped
+    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=4
+
+  # ─── PostgreSQL ───────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: veritrust_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: veritrust
+      POSTGRES_PASSWORD: veritrust
+      POSTGRES_DB: veritrust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - veritrust_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U veritrust -d veritrust"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # ─── Redis ────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: veritrust_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - veritrust_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+
+
+  # ─── Mailpit ──────────────────────────────────────────────────────────────
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: veritrust_mailpit
+    ports:
+      - "8025:8025"   # Web UI
+      - "1025:1025"   # SMTP
+    networks:
+      - veritrust_net
+    restart: unless-stopped
+
+  # ─── Prometheus ───────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: veritrust_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - veritrust_net
+    restart: unless-stopped
+
+  # ─── Grafana ──────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: veritrust_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=veritrust
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - veritrust_net
+    restart: unless-stopped
+
+  # ─── Loki ─────────────────────────────────────────────────────────────────
+  loki:
+    image: grafana/loki:latest
+    container_name: veritrust_loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./docker/loki.yml:/etc/loki/loki.yml
+      - loki_data:/loki
+    networks:
+      - veritrust_net
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki.yml
+
+volumes:
+  postgres_data:
+  redis_data:
+
+  prometheus_data:
+  grafana_data:
+  loki_data:
+
+networks:
+  veritrust_net:
+    driver: bridge

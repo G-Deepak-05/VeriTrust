@@ -1,0 +1,135 @@
+name: VeriTrust CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  # ─── Lint & Type Check ────────────────────────────────────────────────────
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install dependencies
+        run: uv pip install --system -e ".[dev]"
+
+      - name: Run ruff lint
+        run: ruff check app/ tests/
+
+      - name: Run ruff format check
+        run: ruff format --check app/ tests/
+
+      - name: Run mypy
+        run: mypy app/ --ignore-missing-imports
+
+  # ─── Tests ────────────────────────────────────────────────────────────────
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    needs: quality
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: veritrust
+          POSTGRES_PASSWORD: veritrust
+          POSTGRES_DB: veritrust_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install dependencies
+        run: uv pip install --system -e ".[dev]" aiosqlite
+
+      - name: Run tests with coverage
+        env:
+          DATABASE_URL: postgresql+asyncpg://veritrust:veritrust@localhost:5432/veritrust_test
+          REDIS_URL: redis://localhost:6379/0
+          CELERY_BROKER_URL: redis://localhost:6379/1
+          CELERY_RESULT_BACKEND: redis://localhost:6379/2
+          SECRET_KEY: test-secret-key-for-ci-only-32chars
+          ENVIRONMENT: development
+          AWS_ENDPOINT_URL: ""
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        run: |
+          pytest tests/ \
+            --cov=app \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            --cov-fail-under=80 \
+            -v
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  # ─── Docker Build ─────────────────────────────────────────────────────────
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -f docker/Dockerfile -t veritrust:ci .
+
+      - name: Smoke test — container starts
+        run: |
+          docker run -d \
+            -e DATABASE_URL=sqlite:///./test.db \
+            -e REDIS_URL=redis://localhost:6379/0 \
+            -e SECRET_KEY=test-secret-key-32chars-minimum \
+            -e ENVIRONMENT=development \
+            -p 8000:8000 \
+            --name veritrust_ci \
+            veritrust:ci \
+            uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          sleep 5
+          docker logs veritrust_ci
