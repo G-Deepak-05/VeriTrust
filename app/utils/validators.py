@@ -10,7 +10,7 @@ _PAN_PATTERN = re.compile(r"^[A-Z]{5}[0-9]{4}[A-Z]$")
 
 def is_valid_pan(pan: str) -> bool:
     """Validate Indian PAN number format: AAAAA9999A"""
-    return bool(_PAN_PATTERN.match(pan.upper().strip()))
+    return bool(_PAN_PATTERN.match(pan.strip()))
 
 
 # ─── Phone Validation ─────────────────────────────────────────────────────────

@@ -10,14 +10,34 @@ from app.repositories.base_repository import BaseRepository
 class VerificationRepository(BaseRepository[VerificationRequest]):
     model = VerificationRequest
 
+    async def get(self, id: UUID) -> VerificationRequest | None:
+        from sqlalchemy.orm import joinedload
+        result = await self.db.execute(
+            select(VerificationRequest)
+            .options(joinedload(VerificationRequest.result))
+            .where(VerificationRequest.id == id)
+        )
+        return result.scalar_one_or_none()
+
     async def get_by_org(
         self, org_id: UUID, offset: int = 0, limit: int = 20
     ) -> tuple[list[VerificationRequest], int]:
-        return await self.get_multi(
-            filters=[VerificationRequest.organization_id == org_id],
-            offset=offset,
-            limit=limit,
+        from sqlalchemy.orm import joinedload
+        
+        query = (
+            select(VerificationRequest)
+            .options(joinedload(VerificationRequest.result))
+            .where(VerificationRequest.organization_id == org_id)
+            .order_by(VerificationRequest.created_at.desc())
         )
+        count_query = (
+            select(func.count())
+            .select_from(VerificationRequest)
+            .where(VerificationRequest.organization_id == org_id)
+        )
+        total = await self.db.scalar(count_query) or 0
+        result = await self.db.execute(query.offset(offset).limit(limit))
+        return list(result.scalars().all()), total
 
     async def get_stats(self, org_id: UUID) -> dict:
         """Aggregate counts and average score for an organization."""

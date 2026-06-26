@@ -20,3 +20,10 @@ engine = create_async_engine(
 class Base(AsyncAttrs, DeclarativeBase):
     """Base class for all SQLAlchemy ORM models."""
     pass
+
+
+# ─── SQLite-compatible JSONB Fallback ─────────────────────────────────────────
+from sqlalchemy import JSON
+from sqlalchemy.dialects.postgresql import JSONB
+
+JSONB_TYPE = JSONB().with_variant(JSON, "sqlite")

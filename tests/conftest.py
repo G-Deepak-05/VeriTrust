@@ -22,6 +22,11 @@ from app.main import create_app
 # ─── Test Database ────────────────────────────────────────────────────────────
 TEST_DB_URL = "sqlite+aiosqlite:///./test_veritrust.db"
 
+# Override rate limits for testing to prevent 429 errors
+settings.rate_limit_burst = 999999
+settings.rate_limit_per_minute = 999999
+settings.environment = "development"
+
 
 @pytest.fixture(scope="session")
 def event_loop():

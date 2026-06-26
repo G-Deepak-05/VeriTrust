@@ -6,10 +6,9 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
+from app.db.base import Base, JSONB_TYPE
 from app.models.mixins import TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
@@ -27,7 +26,7 @@ class APIKey(UUIDMixin, TimestampMixin, Base):
     hashed_secret: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    permissions: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
+    permissions: Mapped[dict] = mapped_column(JSONB_TYPE, default=dict, nullable=False)
 
     # Relationships
     organization: Mapped["Organization"] = relationship(

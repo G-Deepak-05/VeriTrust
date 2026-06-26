@@ -5,10 +5,9 @@ import uuid
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Float, ForeignKey, Integer, String, Text
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
+from app.db.base import Base, JSONB_TYPE
 from app.models.mixins import TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
@@ -51,9 +50,9 @@ class VerificationResult(UUIDMixin, TimestampMixin, Base):
     )
     risk_score: Mapped[int] = mapped_column(Integer, nullable=False)
     decision: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
-    reasons: Mapped[list] = mapped_column(JSONB, default=list, nullable=False)
+    reasons: Mapped[list] = mapped_column(JSONB_TYPE, default=list, nullable=False)
     processing_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    rule_breakdown: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
+    rule_breakdown: Mapped[dict] = mapped_column(JSONB_TYPE, default=dict, nullable=False)
 
     # Relationship back to request
     request: Mapped["VerificationRequest"] = relationship(

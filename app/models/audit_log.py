@@ -4,10 +4,9 @@ Audit Log model — immutable record of all significant system events.
 import uuid
 
 from sqlalchemy import ForeignKey, String
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import Base
+from app.db.base import Base, JSONB_TYPE
 from app.models.mixins import TimestampMixin, UUIDMixin
 
 
@@ -35,7 +34,7 @@ class AuditLog(UUIDMixin, TimestampMixin, Base):
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="success")
 
     # Extra context (flexible JSONB payload)
-    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict, nullable=False)
+    metadata_: Mapped[dict] = mapped_column("metadata", JSONB_TYPE, default=dict, nullable=False)
 
     def __repr__(self) -> str:
         return f"<AuditLog id={self.id} action={self.action} status={self.status}>"
