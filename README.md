@@ -11,6 +11,25 @@
 
 ---
 
+## 📖 About the Project
+
+**VeriTrust** is a B2B SaaS middleware platform for **digital identity verification and real-time fraud intelligence**. 
+
+It is designed for businesses—such as banks, fintechs, online lenders, and e-commerce platforms—that need to instantly evaluate customer onboarding requests to detect spam, verify documentation formats, and prevent account takeover or signup fraud before users are registered.
+
+### Core Business Use Cases
+* **Fintech & Lending Onboarding**: Automates identity validation checks and compiles dynamic risk metrics.
+* **Signup & Promo Abuse Prevention**: Identifies and blocks bot registrations, multiple signups from the same device, and high-velocity brute-forcing.
+* **Risk Decisioning**: Evaluates custom, tenant-configured fraud scoreboards to approve, review, or reject applications within 300ms.
+
+### Comparison to Commercial Middleware (e.g., Digitap.ai)
+VeriTrust serves as a self-contained local alternative to commercial identity verification platforms like **Digitap.ai**. 
+* **API-First KYC**: Similar to Digitap's developer-facing API suite, B2B clients register organizations, generate secure API keys, and query endpoints (like `/verify`) programmatically.
+* **Custom Fraud Rules**: Clients can create and configure rules dynamically (similar to Digitap's risk scoring scorecards) to weigh different risk flags (e.g., disposable email domain matches, IP address velocity thresholds, device blacklist sets).
+* **Local Sandbox**: Unlike production government endpoints (e.g., direct NSDL/UIDAI calls) that charge licensing and transactional fees, VeriTrust uses pattern regex engines (e.g. Indian PAN structure validation `[A-Z]{5}[0-9]{4}[A-Z]`), Google’s phone validator rules, and Redis caches to provide complete, cost-free simulations of a production onboarding stack.
+
+---
+
 ## 🚀 Quick Start
 
 ```bash
@@ -28,7 +47,10 @@ docker compose up --build
 curl http://localhost:8000/api/v1/health
 ```
 
-**That's it.** All 9 services start automatically.
+**That's it.** All services start automatically.
+
+* **Web UI Dashboard**: Access the fully-integrated dashboard at [http://localhost:8000/ui/](http://localhost:8000/ui/) to register organizations, manage API keys, simulate verification requests, and edit fraud rules interactively.
+* **Swagger API Docs**: Explore the interactive OpenAPI docs at [http://localhost:8000/docs](http://localhost:8000/docs).
 
 ---
 
@@ -79,17 +101,19 @@ Audit Log            ─ Async via Celery
 
 ## 🐳 Services
 
-| Service | URL | Credentials |
-|---|---|---|
-| **API** | http://localhost:8000 | JWT / API Key |
-| **Swagger UI** | http://localhost:8000/docs | — |
-| **ReDoc** | http://localhost:8000/redoc | — |
-| **Mailpit UI** | http://localhost:8025 | — |
-| **Grafana** | http://localhost:3000 | admin / veritrust |
-| **Prometheus** | http://localhost:9090 | — |
-| **LocalStack** | http://localhost:4566 | test / test |
-| **PostgreSQL** | localhost:5432 | veritrust / veritrust |
-| **Redis** | localhost:6379 | — |
+| Service | URL | Credentials | Description |
+|---|---|---|---|
+| **Web UI Dashboard** | http://localhost:8000/ui/ | Form Login / Register | Premium frontend client interface |
+| **API** | http://localhost:8000 | JWT / API Key | Backend FastAPI core API |
+| **Swagger UI** | http://localhost:8000/docs | — | API documentation |
+| **Mailpit UI** | http://localhost:8025 | — | Mock SMTP client interface |
+| **Grafana** | http://localhost:3000 | `admin` / `veritrust` | Observability & logging dashboards |
+| **Prometheus** | http://localhost:9090 | — | Backend metrics scraper |
+| **Loki** | http://localhost:3100 | — | Centralized log ingestion engine |
+| **Promtail** | — | — | Automatically scrapes docker logs and ships to Loki |
+| **AWS Mock (floci)** | http://localhost:4566 | — | User's local AWS mock (configured on host port 4566) |
+| **PostgreSQL** | localhost:5432 | `veritrust` / `veritrust` | Database instance |
+| **Redis** | localhost:6379 | — | Cache, session store, and Celery broker |
 
 ---
 
@@ -272,6 +296,7 @@ VeriTrust/
 │   ├── workers/         # Celery tasks
 │   ├── utils/           # Validators, crypto, AWS client
 │   └── main.py          # App factory
+├── ui/                  # Premium Web UI frontend client
 ├── alembic/             # DB migrations
 ├── tests/               # Pytest unit + integration tests
 ├── docker/              # Dockerfile, Prometheus, Loki, Grafana configs
@@ -292,12 +317,14 @@ The collection includes environment variables and auto-extract scripts for token
 
 ---
 
-## 📊 Monitoring
+## 📊 Monitoring & Logging
 
-- **Prometheus** scrapes `/metrics` every 15s
-- **Grafana** at `localhost:3000` (admin/veritrust)
-- **Loki** collects structured JSON logs from the API
-- **Mailpit** at `localhost:8025` catches all outbound email
+* **Web UI Native Monitoring**: Out-of-the-box system graphs and dynamic fraud rate trends are built directly into the homepage dashboard at [http://localhost:8000/ui/](http://localhost:8000/ui/).
+* **Prometheus**: Automatically collects application metrics at `/metrics` every 15 seconds.
+* **Grafana**: Available at [http://localhost:3000](http://localhost:3000) (credentials: `admin` / `veritrust`). Pre-provisioned with Prometheus and Loki datasources.
+* **Promtail & Loki Log Collection**: Promtail automatically tail logs from all running Docker containers (attaching the `container` metadata label) and pushes them to Loki.
+* **"Application Logs" Dashboard**: A pre-provisioned Grafana dashboard that displays color-coded container logs. Use the **Container** dropdown menu at the top of the dashboard to filter between `veritrust_api`, `veritrust_worker`, or view all container logs intermingled.
+* **Mailpit**: Open [http://localhost:8025](http://localhost:8025) to view all outbound transaction and alert emails triggered by the platform.
 
 ---
 
