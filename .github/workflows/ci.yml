@@ -82,6 +82,20 @@ jobs:
       - name: Install dependencies
         run: uv pip install --system -e ".[dev]" aiosqlite
 
+      - name: Validate settings schema
+        run: |
+          # 1. Dev configuration should succeed
+          ENVIRONMENT=development SECRET_KEY=supersecretkey-change-in-production-min-32chars python -c "from app.core.config import get_settings; get_settings()"
+          # 2. Production configuration with strong secret key should succeed
+          ENVIRONMENT=production SECRET_KEY=strong-secret-key-with-more-than-32-chars-minimum python -c "from app.core.config import get_settings; get_settings()"
+          # 3. Production configuration with default placeholder should fail
+          if ENVIRONMENT=production SECRET_KEY=supersecretkey-change-in-production-min-32chars python -c "from app.core.config import get_settings; get_settings()" 2>/dev/null; then
+            echo "Security vulnerability: weak SECRET_KEY allowed in production!"
+            exit 1
+          else
+            echo "Fail-hard security validator working as expected."
+          fi
+
       - name: Run tests with coverage
         env:
           DATABASE_URL: postgresql+asyncpg://veritrust:veritrust@localhost:5432/veritrust_test

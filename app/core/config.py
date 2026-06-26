@@ -4,7 +4,7 @@ Application configuration — loaded from environment variables via pydantic-set
 from functools import lru_cache
 from typing import Any, Literal
 
-from pydantic import AnyHttpUrl, PostgresDsn, RedisDsn, field_validator
+from pydantic import AnyHttpUrl, PostgresDsn, RedisDsn, field_validator, ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -68,6 +68,27 @@ class Settings(BaseSettings):
 
     # ─── Monitoring ───────────────────────────────────────────────────────────
     prometheus_enabled: bool = True
+
+    @field_validator("secret_key", mode="after")
+    @classmethod
+    def validate_secret_key(cls, v: str, info: ValidationInfo) -> str:
+        """
+        In production we must have a strong, non-placeholder secret key.
+        The validator runs after the value is parsed, so we can also look
+        at other fields (e.g. `environment`) if needed.
+        """
+        # If we are running in production, enforce the check
+        env = info.data.get("environment", "development")
+        if env == "production":
+            # Detect the obvious placeholder used in the repo
+            placeholder_indicators = ["supersecretkey", "change-in-production"]
+            # A minimal length of 32 characters is a common baseline
+            if any(ind in v.lower() for ind in placeholder_indicators) or len(v) < 32:
+                raise ValueError(
+                    "SECURITY: `secret_key` must be set to a strong random value in production."
+                )
+        # In development we silently allow the placeholder
+        return v
 
     @property
     def is_production(self) -> bool:
