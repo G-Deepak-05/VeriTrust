@@ -4,6 +4,8 @@ Verification pipeline service — 10-step identity verification workflow.
 
 import time
 import uuid
+from collections.abc import Awaitable
+from typing import Any, cast
 
 import redis.asyncio as aioredis
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -185,7 +187,9 @@ class VerificationService:
     async def _check_device_blacklisted(self, device_id: str | None) -> bool:
         if not device_id:
             return False
-        return bool(await self.redis.sismember(_DEVICE_BLACKLIST_KEY, device_id))
+        return bool(
+            await cast(Awaitable[Any], self.redis.sismember(_DEVICE_BLACKLIST_KEY, device_id))
+        )
 
     async def _get_ip_velocity(self, ip: str | None) -> int:
         if not ip:

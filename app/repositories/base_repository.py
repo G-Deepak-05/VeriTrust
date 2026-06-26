@@ -27,7 +27,8 @@ class BaseRepository[ModelType: Base]:
 
     async def get(self, id: UUID) -> ModelType | None:
         """Get a single record by primary key."""
-        result = await self.db.execute(select(self.model).where(self.model.id == id))
+        model_any: Any = self.model
+        result = await self.db.execute(select(self.model).where(model_any.id == id))
         return result.scalar_one_or_none()
 
     async def get_multi(
@@ -55,7 +56,8 @@ class BaseRepository[ModelType: Base]:
         if order_by is not None:
             query = query.order_by(order_by)
         else:
-            query = query.order_by(self.model.created_at.desc())
+            model_any: Any = self.model
+            query = query.order_by(model_any.created_at.desc())
 
         total = await self.db.scalar(count_query) or 0
         result = await self.db.execute(query.offset(offset).limit(limit))
