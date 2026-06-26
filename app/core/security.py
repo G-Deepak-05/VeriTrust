@@ -1,6 +1,7 @@
 """
 Security utilities — password hashing, JWT generation & validation.
 """
+
 import hashlib
 import secrets
 from datetime import UTC, datetime, timedelta

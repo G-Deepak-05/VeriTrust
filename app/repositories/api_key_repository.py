@@ -1,4 +1,5 @@
 """API Key repository."""
+
 from datetime import UTC, datetime
 from uuid import UUID
 
@@ -22,7 +23,9 @@ class APIKeyRepository(BaseRepository[APIKey]):
 
     async def get_by_org(self, org_id: UUID) -> list[APIKey]:
         result = await self.db.execute(
-            select(APIKey).where(APIKey.organization_id == org_id).order_by(APIKey.created_at.desc())
+            select(APIKey)
+            .where(APIKey.organization_id == org_id)
+            .order_by(APIKey.created_at.desc())
         )
         return list(result.scalars().all())
 

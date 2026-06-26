@@ -1,6 +1,7 @@
 """
 Cryptographic utilities for API key generation.
 """
+
 import hashlib
 import secrets
 

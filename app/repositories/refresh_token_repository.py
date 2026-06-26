@@ -1,5 +1,5 @@
 """Refresh token repository with rotation and reuse detection support."""
-import secrets
+
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 

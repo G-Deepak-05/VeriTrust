@@ -1,6 +1,7 @@
 """
 Fraud rule schemas.
 """
+
 from datetime import datetime
 from uuid import UUID
 
@@ -40,6 +41,7 @@ class FraudRuleResponse(BaseSchema):
 
 class SimulateRequest(BaseSchema):
     """Dry-run a verification without persisting the result."""
+
     name: str
     email: str
     phone: str | None = None
@@ -50,6 +52,7 @@ class SimulateRequest(BaseSchema):
 
 class SimulateResponse(BaseSchema):
     """Result of fraud simulation — no DB writes."""
+
     success: bool = True
     risk_score: int
     decision: str

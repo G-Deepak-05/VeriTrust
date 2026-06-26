@@ -1,6 +1,7 @@
 """
 Fraud rules router.
 """
+
 import uuid
 
 from fastapi import APIRouter
@@ -37,6 +38,7 @@ async def create_fraud_rule(
     """Create a new org-scoped fraud rule."""
     if not current_user.organization_id:
         from app.core.exceptions import ValidationError
+
         raise ValidationError("User does not belong to an organization")
     return await FraudService(db).create_rule(current_user.organization_id, data)
 
@@ -51,6 +53,7 @@ async def update_fraud_rule(
     """Update an existing fraud rule (org-scoped only)."""
     if not current_user.organization_id:
         from app.core.exceptions import ValidationError
+
         raise ValidationError("User does not belong to an organization")
     return await FraudService(db).update_rule(rule_id, current_user.organization_id, data)
 
@@ -64,6 +67,7 @@ async def delete_fraud_rule(
     """Delete an org-scoped fraud rule."""
     if not current_user.organization_id:
         from app.core.exceptions import ValidationError
+
         raise ValidationError("User does not belong to an organization")
     await FraudService(db).delete_rule(rule_id, current_user.organization_id)
     return MessageResponse(message="Fraud rule deleted")

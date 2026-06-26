@@ -1,14 +1,12 @@
 """
 Unit tests for validation utilities.
 """
-import pytest
 
 from app.utils.validators import (
     is_disposable_email,
     is_private_ip,
     is_valid_ip,
     is_valid_pan,
-    is_valid_phone,
 )
 
 

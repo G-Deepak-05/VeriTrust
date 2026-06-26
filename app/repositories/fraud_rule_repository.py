@@ -1,4 +1,5 @@
 """Fraud rule repository."""
+
 from uuid import UUID
 
 from sqlalchemy import or_, select
@@ -15,17 +16,23 @@ class FraudRuleRepository(BaseRepository[FraudRule]):
         Get all active rules applicable to an org.
         Returns global rules (org_id IS NULL) + org-specific rules.
         """
-        query = select(FraudRule).where(
-            FraudRule.is_active == True,  # noqa: E712
-            or_(FraudRule.organization_id.is_(None), FraudRule.organization_id == org_id),
-        ).order_by(FraudRule.score_impact.desc())
+        query = (
+            select(FraudRule)
+            .where(
+                FraudRule.is_active == True,  # noqa: E712
+                or_(FraudRule.organization_id.is_(None), FraudRule.organization_id == org_id),
+            )
+            .order_by(FraudRule.score_impact.desc())
+        )
         result = await self.db.execute(query)
         return list(result.scalars().all())
 
     async def get_by_org(self, org_id: UUID | None) -> list[FraudRule]:
         """Get all rules for a specific org (including globals)."""
-        query = select(FraudRule).where(
-            or_(FraudRule.organization_id.is_(None), FraudRule.organization_id == org_id)
-        ).order_by(FraudRule.created_at.desc())
+        query = (
+            select(FraudRule)
+            .where(or_(FraudRule.organization_id.is_(None), FraudRule.organization_id == org_id))
+            .order_by(FraudRule.created_at.desc())
+        )
         result = await self.db.execute(query)
         return list(result.scalars().all())

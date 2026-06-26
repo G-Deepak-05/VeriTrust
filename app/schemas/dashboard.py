@@ -1,6 +1,7 @@
 """
 Dashboard and analytics schemas.
 """
+
 from pydantic import Field
 
 from app.schemas.common import BaseSchema
@@ -8,6 +9,7 @@ from app.schemas.common import BaseSchema
 
 class DashboardStats(BaseSchema):
     """High-level stats for the org dashboard."""
+
     total_verifications: int
     approved_count: int
     review_count: int
@@ -29,6 +31,7 @@ class TimeSeriesPoint(BaseSchema):
 
 class AnalyticsResponse(BaseSchema):
     """Time-series analytics for verification trends."""
+
     success: bool = True
     period: str  # "7d", "30d", "90d"
     data: list[TimeSeriesPoint]

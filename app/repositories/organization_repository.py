@@ -1,4 +1,5 @@
 """Organization repository."""
+
 from sqlalchemy import select
 
 from app.models.organization import Organization

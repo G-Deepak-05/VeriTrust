@@ -1,7 +1,6 @@
 """
 Integration tests for API key endpoints.
 """
-import pytest
 
 
 class TestCreateAPIKey:
@@ -53,6 +52,7 @@ class TestRevokeAPIKey:
 
     async def test_revoke_nonexistent_key(self, client, auth_headers):
         import uuid
+
         response = await client.delete(
             f"/api/v1/apikeys/{uuid.uuid4()}",
             headers=auth_headers,

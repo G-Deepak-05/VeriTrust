@@ -1,12 +1,13 @@
 """
 Organization service — CRUD and member management.
 """
+
 import re
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import ConflictError, NotFoundError
+from app.core.exceptions import NotFoundError
 from app.core.logging import get_logger
 from app.repositories.organization_repository import OrganizationRepository
 from app.schemas.organizations import OrgCreate, OrgResponse, OrgUpdate
@@ -66,6 +67,7 @@ class OrganizationService:
             raise NotFoundError("Organization", str(org_id))
         if org.owner_id != requester_id:
             from app.core.exceptions import InsufficientPermissionsError
+
             raise InsufficientPermissionsError("Only the org owner can update the organization")
 
         updates = data.model_dump(exclude_none=True)

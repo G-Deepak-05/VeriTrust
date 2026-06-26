@@ -1,7 +1,6 @@
 """
 Integration tests for authentication endpoints.
 """
-import pytest
 
 
 class TestRegister:

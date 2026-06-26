@@ -1,4 +1,5 @@
 """Verification repository."""
+
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -12,6 +13,7 @@ class VerificationRepository(BaseRepository[VerificationRequest]):
 
     async def get(self, id: UUID) -> VerificationRequest | None:
         from sqlalchemy.orm import joinedload
+
         result = await self.db.execute(
             select(VerificationRequest)
             .options(joinedload(VerificationRequest.result))
@@ -23,7 +25,7 @@ class VerificationRepository(BaseRepository[VerificationRequest]):
         self, org_id: UUID, offset: int = 0, limit: int = 20
     ) -> tuple[list[VerificationRequest], int]:
         from sqlalchemy.orm import joinedload
-        
+
         query = (
             select(VerificationRequest)
             .options(joinedload(VerificationRequest.result))

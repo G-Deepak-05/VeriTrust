@@ -1,6 +1,7 @@
 """
 Health check router — liveness and readiness probes.
 """
+
 from fastapi import APIRouter
 from sqlalchemy import text
 

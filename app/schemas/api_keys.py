@@ -1,6 +1,7 @@
 """
 API Key schemas.
 """
+
 from datetime import datetime
 from uuid import UUID
 
@@ -20,6 +21,7 @@ class APIKeyCreate(BaseSchema):
 
 class APIKeyResponse(BaseSchema):
     """Response after listing keys — secret is NEVER shown here."""
+
     id: UUID
     name: str
     key_prefix: str
@@ -34,6 +36,7 @@ class APIKeyCreatedResponse(BaseSchema):
     Response immediately after key creation — secret shown ONCE only.
     Clients must store this securely; it cannot be retrieved again.
     """
+
     success: bool = True
     message: str = "Store this key securely — it will not be shown again."
     id: UUID

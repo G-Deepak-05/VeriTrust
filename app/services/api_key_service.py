@@ -1,6 +1,7 @@
 """
 API Key service — generation, listing, and revocation.
 """
+
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,9 +20,7 @@ class APIKeyService:
         self.db = db
         self.repo = APIKeyRepository(db)
 
-    async def create_key(
-        self, org_id: uuid.UUID, data: APIKeyCreate
-    ) -> APIKeyCreatedResponse:
+    async def create_key(self, org_id: uuid.UUID, data: APIKeyCreate) -> APIKeyCreatedResponse:
         """
         Generate a new API key for an organization.
         The full secret is returned ONCE and never stored in plaintext.

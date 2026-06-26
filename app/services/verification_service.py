@@ -1,16 +1,15 @@
 """
 Verification pipeline service — 10-step identity verification workflow.
 """
+
 import time
 import uuid
-from datetime import UTC, datetime
 
 import redis.asyncio as aioredis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
 from app.core.logging import get_logger
-from app.models.verification import VerificationRequest, VerificationResult
 from app.repositories.fraud_rule_repository import FraudRuleRepository
 from app.repositories.verification_repository import VerificationRepository
 from app.schemas.verification import (
@@ -20,7 +19,6 @@ from app.schemas.verification import (
     VerificationResponse,
 )
 from app.services.fraud_service import FraudService, make_decision
-from app.utils.validators import is_disposable_email, is_valid_pan, is_valid_phone
 
 logger = get_logger(__name__)
 
@@ -39,9 +37,7 @@ class VerificationService:
         self.fraud_service = FraudService(db)
         self.fraud_rule_repo = FraudRuleRepository(db)
 
-    async def submit(
-        self, org_id: uuid.UUID, data: VerificationInput
-    ) -> VerificationResponse:
+    async def submit(self, org_id: uuid.UUID, data: VerificationInput) -> VerificationResponse:
         """
         Run the full 10-step verification pipeline.
 
@@ -88,6 +84,7 @@ class VerificationService:
 
         # Step 10: Persist result
         from app.models.verification import VerificationResult as VRModel
+
         result_obj = VRModel(
             request_id=vr.id,
             risk_score=rule_result.total_score,
@@ -113,6 +110,7 @@ class VerificationService:
         # Dispatch audit log via Celery
         try:
             from app.workers.tasks import write_audit_log_task
+
             write_audit_log_task.delay(
                 action="verification.completed",
                 resource_id=str(vr.id),

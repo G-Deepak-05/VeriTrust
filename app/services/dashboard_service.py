@@ -1,6 +1,7 @@
 """
 Dashboard analytics service.
 """
+
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -42,9 +43,7 @@ class DashboardService:
             total_members=member_count,
         )
 
-    async def get_analytics(
-        self, org_id: uuid.UUID, period: str = "30d"
-    ) -> AnalyticsResponse:
+    async def get_analytics(self, org_id: uuid.UUID, period: str = "30d") -> AnalyticsResponse:
         """Return time-series verification data grouped by day."""
         days = {"7d": 7, "30d": 30, "90d": 90}.get(period, 30)
         since = datetime.now(UTC) - timedelta(days=days)
@@ -94,7 +93,9 @@ class DashboardService:
                 approved=v["approved"],
                 review=v["review"],
                 rejected=v["rejected"],
-                avg_risk_score=round(sum(v["scores"]) / len(v["scores"]), 2) if v["scores"] else 0.0,
+                avg_risk_score=round(sum(v["scores"]) / len(v["scores"]), 2)
+                if v["scores"]
+                else 0.0,
             )
             for d, v in sorted(date_map.items())
         ]

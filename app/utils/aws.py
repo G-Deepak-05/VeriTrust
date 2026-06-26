@@ -4,6 +4,7 @@ AWS / LocalStack client factory.
 Uses boto3 with AWS_ENDPOINT_URL to target LocalStack in development
 and real AWS in production — zero code changes required.
 """
+
 import boto3
 from botocore.config import Config
 

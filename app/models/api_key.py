@@ -1,6 +1,7 @@
 """
 API Key model — organization-scoped keys with hashed secrets.
 """
+
 import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -8,7 +9,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Boolean, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base, JSONB_TYPE
+from app.db.base import JSONB_TYPE, Base
 from app.models.mixins import TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:

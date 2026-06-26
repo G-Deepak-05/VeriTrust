@@ -1,6 +1,7 @@
 """
 Shared mixins for SQLAlchemy models.
 """
+
 import uuid
 from datetime import UTC, datetime
 
@@ -10,6 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 class UUIDMixin:
     """Adds a UUID primary key."""
+
     id: Mapped[uuid.UUID] = mapped_column(
         primary_key=True,
         default=uuid.uuid4,
@@ -19,6 +21,7 @@ class UUIDMixin:
 
 class TimestampMixin:
     """Adds created_at and updated_at timestamps."""
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),

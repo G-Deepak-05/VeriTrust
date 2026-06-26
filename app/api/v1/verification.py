@@ -1,6 +1,7 @@
 """
 Verification router — submit and query verification requests.
 """
+
 import uuid
 
 from fastapi import APIRouter, Depends, Query

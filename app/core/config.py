@@ -1,10 +1,11 @@
 """
 Application configuration — loaded from environment variables via pydantic-settings.
 """
+
 from functools import lru_cache
 from typing import Any, Literal
 
-from pydantic import AnyHttpUrl, PostgresDsn, RedisDsn, field_validator, ValidationInfo
+from pydantic import ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

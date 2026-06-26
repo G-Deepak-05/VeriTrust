@@ -2,7 +2,6 @@
 Redis-backed sliding window rate limiter middleware.
 Limits: 100 req/min per API key, 20 req/min per IP for unauthenticated.
 """
-import time
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request

@@ -1,6 +1,7 @@
 """
 Refresh Token model — stored server-side for rotation and reuse detection.
 """
+
 import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING

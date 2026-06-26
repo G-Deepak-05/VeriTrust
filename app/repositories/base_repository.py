@@ -1,7 +1,8 @@
 """
 Generic async base repository — provides CRUD operations for any SQLAlchemy model.
 """
-from typing import Any, Generic, TypeVar
+
+from typing import Any, TypeVar
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -12,7 +13,7 @@ from app.db.base import Base
 ModelType = TypeVar("ModelType", bound=Base)
 
 
-class BaseRepository(Generic[ModelType]):
+class BaseRepository[ModelType: Base]:
     """
     Generic async CRUD repository.
 

@@ -2,8 +2,9 @@
 Audit middleware — captures request context for every API call.
 Non-blocking: dispatches audit events to Celery.
 """
+
+import contextlib
 import time
-import uuid
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -33,16 +34,12 @@ class AuditMiddleware(BaseHTTPMiddleware):
         duration_ms = int((time.monotonic() - start) * 1000)
 
         # Async audit dispatch — never block the response
-        try:
+        with contextlib.suppress(Exception):
             self._dispatch_audit(request, response.status_code, duration_ms)
-        except Exception:
-            pass  # Audit failures must NEVER affect the API response
 
         return response
 
-    def _dispatch_audit(
-        self, request: Request, status_code: int, duration_ms: int
-    ) -> None:
+    def _dispatch_audit(self, request: Request, status_code: int, duration_ms: int) -> None:
         """Dispatch audit event to Celery (non-blocking)."""
         try:
             from app.workers.tasks import write_audit_log_task

@@ -1,5 +1,6 @@
 import pytest
 from pydantic import ValidationError
+
 from app.core.config import Settings
 
 
@@ -28,9 +29,8 @@ def test_settings_production_weak_secret_key():
             environment="production",
             secret_key="supersecretkey-change-in-production-min-32chars",
         )
-    assert (
-        "SECURITY: `secret_key` must be set to a strong random value in production."
-        in str(exc_info.value)
+    assert "SECURITY: `secret_key` must be set to a strong random value in production." in str(
+        exc_info.value
     )
 
 
@@ -38,7 +38,6 @@ def test_settings_production_short_secret_key():
     # Should raise ValidationError
     with pytest.raises(ValidationError) as exc_info:
         Settings(environment="production", secret_key="shortkey")
-    assert (
-        "SECURITY: `secret_key` must be set to a strong random value in production."
-        in str(exc_info.value)
+    assert "SECURITY: `secret_key` must be set to a strong random value in production." in str(
+        exc_info.value
     )

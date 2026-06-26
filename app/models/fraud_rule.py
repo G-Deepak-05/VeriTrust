@@ -1,12 +1,13 @@
 """
 Fraud Rule model — configurable rules stored in the database.
 """
+
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import Base, JSONB_TYPE
+from app.db.base import JSONB_TYPE, Base
 from app.models.mixins import TimestampMixin, UUIDMixin
 
 

@@ -1,6 +1,7 @@
 """
 Dashboard and analytics router.
 """
+
 from fastapi import APIRouter, Query
 
 from app.core.dependencies import CurrentUser, DBSession
@@ -18,6 +19,7 @@ async def get_dashboard_stats(
     """Return high-level stats for the current organization."""
     if not current_user.organization_id:
         from app.core.exceptions import ValidationError
+
         raise ValidationError("User does not belong to an organization")
     return await DashboardService(db).get_stats(current_user.organization_id)
 
@@ -31,5 +33,6 @@ async def get_analytics(
     """Return time-series verification analytics for the organization."""
     if not current_user.organization_id:
         from app.core.exceptions import ValidationError
+
         raise ValidationError("User does not belong to an organization")
     return await DashboardService(db).get_analytics(current_user.organization_id, period)

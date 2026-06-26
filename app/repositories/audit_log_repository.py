@@ -1,7 +1,6 @@
 """Audit log repository."""
-from uuid import UUID
 
-from sqlalchemy import select, update
+from uuid import UUID
 
 from app.models.audit_log import AuditLog
 from app.repositories.base_repository import BaseRepository

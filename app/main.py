@@ -1,6 +1,7 @@
 """
 VeriTrust — FastAPI application factory.
 """
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -25,8 +26,10 @@ async def lifespan(app: FastAPI):
     # Validate DB + Redis on startup
     try:
         from app.db.session import AsyncSessionLocal
+
         async with AsyncSessionLocal() as session:
             from sqlalchemy import text
+
             await session.execute(text("SELECT 1"))
         logger.info("PostgreSQL connection verified")
     except Exception as e:
@@ -34,6 +37,7 @@ async def lifespan(app: FastAPI):
 
     try:
         import redis.asyncio as aioredis
+
         r = aioredis.from_url(settings.redis_url)
         await r.ping()
         await r.aclose()
@@ -65,7 +69,10 @@ def create_app() -> FastAPI:
         redoc_url="/redoc",
         openapi_url="/openapi.json",
         lifespan=lifespan,
-        contact={"name": "VeriTrust GitHub Repository", "url": "https://github.com/G-Deepak-05/VeriTrust"},
+        contact={
+            "name": "VeriTrust GitHub Repository",
+            "url": "https://github.com/G-Deepak-05/VeriTrust",
+        },
         license_info={"name": "MIT"},
     )
 
@@ -91,6 +98,7 @@ def create_app() -> FastAPI:
     if settings.prometheus_enabled:
         try:
             from prometheus_fastapi_instrumentator import Instrumentator
+
             Instrumentator().instrument(app).expose(app, endpoint="/metrics")
         except ImportError:
             logger.warning("prometheus_fastapi_instrumentator not installed, skipping metrics")
@@ -99,8 +107,10 @@ def create_app() -> FastAPI:
     app.include_router(api_v1_router, prefix=settings.api_prefix)
 
     # ─── UI Static Files ──────────────────────────────────────────────────────
-    from fastapi.staticfiles import StaticFiles
     import os
+
+    from fastapi.staticfiles import StaticFiles
+
     if os.path.exists("ui"):
         app.mount("/ui", StaticFiles(directory="ui", html=True), name="ui")
 

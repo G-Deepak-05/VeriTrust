@@ -1,9 +1,10 @@
 """
 Organization schemas.
 """
+
 from uuid import UUID
 
-from pydantic import AnyHttpUrl, Field, field_validator
+from pydantic import Field
 
 from app.schemas.common import BaseSchema
 

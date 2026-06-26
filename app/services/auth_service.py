@@ -1,6 +1,7 @@
 """
 Authentication service — register, login, token rotation, logout.
 """
+
 import secrets
 from datetime import UTC, datetime
 
@@ -62,6 +63,7 @@ class AuthService:
 
         # Set org owner_id now that we have the user
         from app.repositories.organization_repository import OrganizationRepository
+
         org_repo = OrganizationRepository(self.db)
         await org_repo.update(org, owner_id=user.id)
 
@@ -136,9 +138,7 @@ class AuthService:
         """Return current user profile."""
         return UserResponse.model_validate(user)
 
-    async def _issue_tokens(
-        self, user: User, session_id: str | None = None
-    ) -> TokenResponse:
+    async def _issue_tokens(self, user: User, session_id: str | None = None) -> TokenResponse:
         """Create access + refresh token pair and persist the refresh token."""
         extra_claims = {
             "role": user.role,

@@ -1,6 +1,7 @@
 """
 Audit log schemas.
 """
+
 from datetime import datetime
 from uuid import UUID
 

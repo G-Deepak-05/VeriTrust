@@ -1,6 +1,7 @@
 """
 Organization model.
 """
+
 import uuid
 from typing import TYPE_CHECKING
 
@@ -26,9 +27,7 @@ class Organization(UUIDMixin, TimestampMixin, Base):
     owner_id: Mapped[uuid.UUID] = mapped_column(nullable=False, index=True)
 
     # Relationships
-    users: Mapped[list["User"]] = relationship(
-        "User", back_populates="organization", lazy="select"
-    )
+    users: Mapped[list["User"]] = relationship("User", back_populates="organization", lazy="select")
     api_keys: Mapped[list["APIKey"]] = relationship(
         "APIKey", back_populates="organization", lazy="select"
     )

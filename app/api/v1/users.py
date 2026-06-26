@@ -1,6 +1,7 @@
 """
 Users router.
 """
+
 import uuid
 
 from fastapi import APIRouter
@@ -19,6 +20,7 @@ async def list_users(
 ) -> PaginatedResponse[UserResponse]:
     """List all users in the current organization. Requires admin role."""
     from app.repositories.user_repository import UserRepository
+
     repo = UserRepository(db)
     if not current_user.organization_id:
         return PaginatedResponse(data=[], total=0, page=1, page_size=20, total_pages=0)
@@ -40,6 +42,7 @@ async def get_user(
 ) -> UserResponse:
     from app.core.exceptions import NotFoundError
     from app.repositories.user_repository import UserRepository
+
     repo = UserRepository(db)
     user = await repo.get(user_id)
     if not user or user.organization_id != current_user.organization_id:

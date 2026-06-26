@@ -1,10 +1,10 @@
 """
 Authentication router.
 """
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import CurrentUser, DBSession, get_current_active_user
+from fastapi import APIRouter
+
+from app.core.dependencies import CurrentUser, DBSession
 from app.schemas.auth import (
     ForgotPasswordRequest,
     LoginRequest,

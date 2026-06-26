@@ -1,8 +1,8 @@
 """
 Celery background tasks.
 """
+
 import asyncio
-from typing import Any
 from uuid import UUID
 
 from app.workers.celery_app import celery_app

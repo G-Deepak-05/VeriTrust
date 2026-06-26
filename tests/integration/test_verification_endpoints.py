@@ -1,8 +1,6 @@
 """
 Integration tests for verification endpoints.
 """
-import pytest
-
 
 VALID_PAYLOAD = {
     "name": "John Doe",
@@ -71,15 +69,11 @@ class TestGetVerification:
         headers = {"X-Api-Key": full_key}
 
         # Submit first
-        create_resp = await client.post(
-            "/api/v1/verify", json=VALID_PAYLOAD, headers=headers
-        )
+        create_resp = await client.post("/api/v1/verify", json=VALID_PAYLOAD, headers=headers)
         verification_id = create_resp.json()["verification_id"]
 
         # Fetch detail
-        get_resp = await client.get(
-            f"/api/v1/verify/{verification_id}", headers=headers
-        )
+        get_resp = await client.get(f"/api/v1/verify/{verification_id}", headers=headers)
         assert get_resp.status_code == 200
         data = get_resp.json()
         assert data["verification_id"] == verification_id
@@ -88,6 +82,7 @@ class TestGetVerification:
 
     async def test_get_nonexistent_verification(self, client, test_api_key):
         import uuid
+
         _, full_key = test_api_key
         response = await client.get(
             f"/api/v1/verify/{uuid.uuid4()}",

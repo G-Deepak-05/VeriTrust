@@ -1,6 +1,7 @@
 """
 Pytest configuration and shared fixtures for VeriTrust tests.
 """
+
 import asyncio
 import uuid
 from collections.abc import AsyncGenerator
@@ -49,7 +50,7 @@ async def db_engine():
 
 
 @pytest_asyncio.fixture(scope="function")
-async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
+async def db_session(db_engine) -> AsyncGenerator[AsyncSession]:
     """Provide an async DB session for tests."""
     session_factory = async_sessionmaker(
         bind=db_engine, class_=AsyncSession, expire_on_commit=False
@@ -92,7 +93,7 @@ async def app(db_session, mock_redis) -> FastAPI:
 
 
 @pytest_asyncio.fixture(scope="function")
-async def client(app) -> AsyncGenerator[AsyncClient, None]:
+async def client(app) -> AsyncGenerator[AsyncClient]:
     """Async HTTP client for endpoint testing."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
@@ -175,11 +176,46 @@ async def test_fraud_rules(db_session, test_org) -> list[Any]:
     from app.models.fraud_rule import FraudRule
 
     rules = [
-        FraudRule(rule_name="disposable_email", rule_type="email", description="Disposable email", score_impact=25, is_active=True, config={}),
-        FraudRule(rule_name="invalid_pan_format", rule_type="document", description="Invalid PAN", score_impact=20, is_active=True, config={}),
-        FraudRule(rule_name="phone_reused", rule_type="phone", description="Phone reused", score_impact=15, is_active=True, config={"max_count": 3}),
-        FraudRule(rule_name="blacklisted_device", rule_type="device", description="Blacklisted device", score_impact=30, is_active=True, config={}),
-        FraudRule(rule_name="high_velocity", rule_type="velocity", description="High velocity", score_impact=25, is_active=True, config={"max_requests": 5, "window_seconds": 3600}),
+        FraudRule(
+            rule_name="disposable_email",
+            rule_type="email",
+            description="Disposable email",
+            score_impact=25,
+            is_active=True,
+            config={},
+        ),
+        FraudRule(
+            rule_name="invalid_pan_format",
+            rule_type="document",
+            description="Invalid PAN",
+            score_impact=20,
+            is_active=True,
+            config={},
+        ),
+        FraudRule(
+            rule_name="phone_reused",
+            rule_type="phone",
+            description="Phone reused",
+            score_impact=15,
+            is_active=True,
+            config={"max_count": 3},
+        ),
+        FraudRule(
+            rule_name="blacklisted_device",
+            rule_type="device",
+            description="Blacklisted device",
+            score_impact=30,
+            is_active=True,
+            config={},
+        ),
+        FraudRule(
+            rule_name="high_velocity",
+            rule_type="velocity",
+            description="High velocity",
+            score_impact=25,
+            is_active=True,
+            config={"max_requests": 5, "window_seconds": 3600},
+        ),
     ]
     for rule in rules:
         db_session.add(rule)

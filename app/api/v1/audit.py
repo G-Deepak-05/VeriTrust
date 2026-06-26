@@ -1,6 +1,7 @@
 """
 Audit logs router.
 """
+
 from fastapi import APIRouter, Query
 
 from app.core.dependencies import CurrentUser, DBSession

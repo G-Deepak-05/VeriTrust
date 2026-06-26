@@ -1,6 +1,9 @@
 """
 SQLAlchemy async engine and declarative base.
 """
+
+from sqlalchemy import JSON
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -19,11 +22,9 @@ engine = create_async_engine(
 # ─── Declarative Base ─────────────────────────────────────────────────────────
 class Base(AsyncAttrs, DeclarativeBase):
     """Base class for all SQLAlchemy ORM models."""
+
     pass
 
 
 # ─── SQLite-compatible JSONB Fallback ─────────────────────────────────────────
-from sqlalchemy import JSON
-from sqlalchemy.dialects.postgresql import JSONB
-
 JSONB_TYPE = JSONB().with_variant(JSON, "sqlite")

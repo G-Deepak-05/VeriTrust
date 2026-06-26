@@ -1,8 +1,10 @@
 """
 Unit tests for the fraud rule engine.
 """
-import pytest
+
 from unittest.mock import MagicMock
+
+import pytest
 
 from app.services.fraud_service import FraudService, make_decision
 
@@ -45,8 +47,12 @@ class TestRuleEvaluation:
     def test_clean_email_no_flags(self, fraud_service):
         rules = [self._make_rule("disposable_email", "email", 25)]
         result = fraud_service.evaluate_rules(
-            rules, email="john@gmail.com", phone=None, pan="ABCDE1234F",
-            ip_address=None, device_id=None
+            rules,
+            email="john@gmail.com",
+            phone=None,
+            pan="ABCDE1234F",
+            ip_address=None,
+            device_id=None,
         )
         assert result.total_score == 0
         assert len(result.reasons) == 0
@@ -54,8 +60,12 @@ class TestRuleEvaluation:
     def test_disposable_email_flagged(self, fraud_service):
         rules = [self._make_rule("disposable_email", "email", 25)]
         result = fraud_service.evaluate_rules(
-            rules, email="test@mailinator.com", phone=None, pan=None,
-            ip_address=None, device_id=None
+            rules,
+            email="test@mailinator.com",
+            phone=None,
+            pan=None,
+            ip_address=None,
+            device_id=None,
         )
         assert result.total_score == 25
         assert "disposable_email" in result.breakdown
@@ -63,40 +73,63 @@ class TestRuleEvaluation:
     def test_invalid_pan_flagged(self, fraud_service):
         rules = [self._make_rule("invalid_pan_format", "document", 20)]
         result = fraud_service.evaluate_rules(
-            rules, email="john@gmail.com", phone=None, pan="INVALID",
-            ip_address=None, device_id=None
+            rules,
+            email="john@gmail.com",
+            phone=None,
+            pan="INVALID",
+            ip_address=None,
+            device_id=None,
         )
         assert result.total_score == 20
 
     def test_valid_pan_not_flagged(self, fraud_service):
         rules = [self._make_rule("invalid_pan_format", "document", 20)]
         result = fraud_service.evaluate_rules(
-            rules, email="john@gmail.com", phone=None, pan="ABCDE1234F",
-            ip_address=None, device_id=None
+            rules,
+            email="john@gmail.com",
+            phone=None,
+            pan="ABCDE1234F",
+            ip_address=None,
+            device_id=None,
         )
         assert result.total_score == 0
 
     def test_phone_reused_flagged(self, fraud_service):
         rules = [self._make_rule("phone_reused", "phone", 15)]
         result = fraud_service.evaluate_rules(
-            rules, email="john@gmail.com", phone="+919999999999", pan=None,
-            ip_address=None, device_id=None, phone_seen_before=True
+            rules,
+            email="john@gmail.com",
+            phone="+919999999999",
+            pan=None,
+            ip_address=None,
+            device_id=None,
+            phone_seen_before=True,
         )
         assert result.total_score == 15
 
     def test_blacklisted_device_flagged(self, fraud_service):
         rules = [self._make_rule("blacklisted_device", "device", 30)]
         result = fraud_service.evaluate_rules(
-            rules, email="john@gmail.com", phone=None, pan=None,
-            ip_address=None, device_id="device_bad", device_blacklisted=True
+            rules,
+            email="john@gmail.com",
+            phone=None,
+            pan=None,
+            ip_address=None,
+            device_id="device_bad",
+            device_blacklisted=True,
         )
         assert result.total_score == 30
 
     def test_high_velocity_flagged(self, fraud_service):
         rules = [self._make_rule("high_velocity", "velocity", 25, config={"max_requests": 5})]
         result = fraud_service.evaluate_rules(
-            rules, email="john@gmail.com", phone=None, pan=None,
-            ip_address="103.44.1.1", device_id=None, ip_request_count=6
+            rules,
+            email="john@gmail.com",
+            phone=None,
+            pan=None,
+            ip_address="103.44.1.1",
+            device_id=None,
+            ip_request_count=6,
         )
         assert result.total_score == 25
 
@@ -107,16 +140,25 @@ class TestRuleEvaluation:
             self._make_rule("blacklisted_device", "device", 50),
         ]
         result = fraud_service.evaluate_rules(
-            rules, email="test@mailinator.com", phone=None, pan="BAD",
-            ip_address=None, device_id="bad_device", device_blacklisted=True
+            rules,
+            email="test@mailinator.com",
+            phone=None,
+            pan="BAD",
+            ip_address=None,
+            device_id="bad_device",
+            device_blacklisted=True,
         )
         assert result.total_score <= 100
 
     def test_inactive_rule_skipped(self, fraud_service):
         rules = [self._make_rule("disposable_email", "email", 25, is_active=False)]
         result = fraud_service.evaluate_rules(
-            rules, email="test@mailinator.com", phone=None, pan=None,
-            ip_address=None, device_id=None
+            rules,
+            email="test@mailinator.com",
+            phone=None,
+            pan=None,
+            ip_address=None,
+            device_id=None,
         )
         assert result.total_score == 0
 
@@ -126,8 +168,13 @@ class TestRuleEvaluation:
             self._make_rule("phone_reused", "phone", 15),
         ]
         result = fraud_service.evaluate_rules(
-            rules, email="test@mailinator.com", phone="+919999999999", pan=None,
-            ip_address=None, device_id=None, phone_seen_before=True
+            rules,
+            email="test@mailinator.com",
+            phone="+919999999999",
+            pan=None,
+            ip_address=None,
+            device_id=None,
+            phone_seen_before=True,
         )
         assert result.total_score == 40
         assert len(result.reasons) == 2

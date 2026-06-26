@@ -1,6 +1,7 @@
 """
 Custom exception classes and global FastAPI exception handlers.
 """
+
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -12,7 +13,7 @@ logger = get_logger(__name__)
 
 
 # ─── Base Exception ───────────────────────────────────────────────────────────
-class VeriTrustException(Exception):
+class VeriTrustException(Exception):  # noqa: N818
     """Base exception for all VeriTrust application errors."""
 
     def __init__(
@@ -66,9 +67,7 @@ class ValidationError(VeriTrustException):
 # ─── Business Logic Exceptions ────────────────────────────────────────────────
 class OrganizationInactiveError(VeriTrustException):
     def __init__(self) -> None:
-        super().__init__(
-            "Organization is inactive", status.HTTP_403_FORBIDDEN, "ORG_INACTIVE"
-        )
+        super().__init__("Organization is inactive", status.HTTP_403_FORBIDDEN, "ORG_INACTIVE")
 
 
 class APIKeyInvalidError(VeriTrustException):

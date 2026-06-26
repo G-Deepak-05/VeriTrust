@@ -1,7 +1,6 @@
 """
 Integration tests for organization endpoints.
 """
-import pytest
 
 
 class TestCreateOrganization:
@@ -38,6 +37,7 @@ class TestGetOrganization:
 
     async def test_get_nonexistent_org(self, client, auth_headers):
         import uuid
+
         response = await client.get(
             f"/api/v1/organizations/{uuid.uuid4()}",
             headers=auth_headers,
@@ -51,6 +51,7 @@ class TestUpdateOrganization:
 
         # Make test_user the owner
         from app.repositories.organization_repository import OrganizationRepository
+
         repo = OrganizationRepository(db_session)
         await repo.update(test_org, owner_id=test_user.id)
 

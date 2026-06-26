@@ -1,6 +1,7 @@
 """
 Fraud Rule Engine — evaluates configurable rules and produces risk scores.
 """
+
 import uuid
 from dataclasses import dataclass, field
 
@@ -20,7 +21,6 @@ from app.schemas.fraud import (
 from app.utils.validators import (
     is_disposable_email,
     is_valid_pan,
-    is_valid_phone,
 )
 
 logger = get_logger(__name__)
@@ -98,7 +98,6 @@ class FraudService:
                 case "geo":
                     # Country mismatch — simplified: check if IP is private/reserved
                     if rule.rule_name == "country_mismatch" and ip_address and phone:
-                        from app.utils.validators import is_private_ip
                         # In a real system: geolocate IP and compare to phone country
                         # For MVP: flag if IP is non-Indian private range with +91 phone
                         triggered = False  # Stub — extendable
@@ -115,9 +114,7 @@ class FraudService:
         result.total_score = min(100, max(0, result.total_score))
         return result
 
-    async def simulate(
-        self, org_id: uuid.UUID | None, data: SimulateRequest
-    ) -> SimulateResponse:
+    async def simulate(self, org_id: uuid.UUID | None, data: SimulateRequest) -> SimulateResponse:
         """Dry-run fraud evaluation — no DB writes."""
         rules = await self.repo.get_active_rules(org_id)
         result = self.evaluate_rules(
@@ -139,9 +136,7 @@ class FraudService:
         rules = await self.repo.get_by_org(org_id)
         return [FraudRuleResponse.model_validate(r) for r in rules]
 
-    async def create_rule(
-        self, org_id: uuid.UUID, data: FraudRuleCreate
-    ) -> FraudRuleResponse:
+    async def create_rule(self, org_id: uuid.UUID, data: FraudRuleCreate) -> FraudRuleResponse:
         rule = await self.repo.create(
             organization_id=org_id,
             rule_name=data.rule_name,

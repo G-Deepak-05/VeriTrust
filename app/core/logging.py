@@ -2,6 +2,7 @@
 Structured JSON logging using structlog.
 Compatible with Loki log aggregation.
 """
+
 import logging
 import sys
 
@@ -33,12 +34,11 @@ def setup_logging() -> None:
 
     if settings.is_development:
         # Pretty console output for development
-        processors = shared_processors + [
-            structlog.dev.ConsoleRenderer(colors=True),
-        ]
+        processors = [*shared_processors, structlog.dev.ConsoleRenderer(colors=True)]
     else:
         # JSON output for production / Loki ingestion
-        processors = shared_processors + [
+        processors = [
+            *shared_processors,
             structlog.processors.dict_tracebacks,
             structlog.processors.JSONRenderer(),
         ]

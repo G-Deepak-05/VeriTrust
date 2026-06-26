@@ -1,6 +1,7 @@
 """
 API Keys router.
 """
+
 import uuid
 
 from fastapi import APIRouter
@@ -27,6 +28,7 @@ async def create_api_key(
     """
     if not current_user.organization_id:
         from app.core.exceptions import ValidationError
+
         raise ValidationError("User does not belong to an organization")
     return await APIKeyService(db).create_key(current_user.organization_id, data)
 
@@ -51,6 +53,7 @@ async def revoke_api_key(
     """Revoke (soft-delete) an API key."""
     if not current_user.organization_id:
         from app.core.exceptions import ValidationError
+
         raise ValidationError("User does not belong to an organization")
     await APIKeyService(db).revoke_key(key_id, current_user.organization_id)
     return MessageResponse(message="API key revoked")

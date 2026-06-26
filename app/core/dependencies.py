@@ -2,11 +2,12 @@
 FastAPI dependency injection factories.
 Provides reusable dependencies for DB sessions, Redis, authentication, and RBAC.
 """
+
 from typing import Annotated
 from uuid import UUID
 
 import redis.asyncio as aioredis
-from fastapi import Depends, Header, HTTPException, Security, status
+from fastapi import Depends, Header, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,9 +19,9 @@ from app.core.exceptions import (
     InsufficientPermissionsError,
     InvalidTokenError,
 )
-from app.core.security import decode_access_token, hash_api_key
-from app.db.session import get_db  # noqa: F401 — re-exported
 from app.core.logging import get_logger
+from app.core.security import decode_access_token, hash_api_key
+from app.db.session import get_db
 
 logger = get_logger(__name__)
 
@@ -54,7 +55,6 @@ async def get_current_user(
     Raises 401 if token is missing, invalid, or user not found.
     """
     # Import here to avoid circular imports
-    from app.models.user import User
     from app.repositories.user_repository import UserRepository
 
     if not credentials:
@@ -63,7 +63,7 @@ async def get_current_user(
     try:
         payload = decode_access_token(credentials.credentials)
     except JWTError:
-        raise InvalidTokenError()
+        raise InvalidTokenError() from None
 
     user_id = payload.get("sub")
     if not user_id:
@@ -116,7 +116,6 @@ async def get_api_key_org(
     Validate X-Api-Key header and return the associated organization.
     Updates last_used_at timestamp on the key.
     """
-    from app.models.organization import Organization
     from app.repositories.api_key_repository import APIKeyRepository
 
     if not x_api_key:
@@ -135,6 +134,7 @@ async def get_api_key_org(
     org = api_key.organization
     if not org or not org.is_active:
         from app.core.exceptions import OrganizationInactiveError
+
         raise OrganizationInactiveError()
 
     return org

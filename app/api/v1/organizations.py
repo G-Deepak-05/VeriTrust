@@ -1,11 +1,12 @@
 """
 Organizations router.
 """
+
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from app.core.dependencies import CurrentUser, DBSession, require_roles
+from app.core.dependencies import CurrentUser, DBSession
 from app.schemas.common import MessageResponse
 from app.schemas.organizations import OrgCreate, OrgResponse, OrgUpdate
 from app.services.organization_service import OrganizationService
