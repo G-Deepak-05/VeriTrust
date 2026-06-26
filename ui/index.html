@@ -1274,45 +1274,16 @@ const state = {
   currentPage: 'dashboard',
 };
 
-/* Mock data for demo when API is unavailable */
+/* Empty stats and data arrays for actual user profiles (no mock data fallback) */
 const DEMO = {
-  stats: { total_verifications:2847, approved_count:2391, review_count:289, rejected_count:167,
-           approval_rate:83.98, average_risk_score:22.4, api_keys_active:3, total_members:4 },
-  history: [
-    { verification_id:'550e8400-e29b-41d4-a716-446655440001', email:'john@gmail.com', risk_score:12, decision:'APPROVED', status:'completed', created_at:'2026-06-26T08:22:11Z' },
-    { verification_id:'550e8400-e29b-41d4-a716-446655440002', email:'user@mailinator.com', risk_score:45, decision:'REVIEW', status:'completed', created_at:'2026-06-26T07:45:00Z' },
-    { verification_id:'550e8400-e29b-41d4-a716-446655440003', email:'fraud@temp.com', risk_score:75, decision:'REJECT', status:'completed', created_at:'2026-06-26T06:30:00Z' },
-    { verification_id:'550e8400-e29b-41d4-a716-446655440004', email:'alice@corporate.io', risk_score:8, decision:'APPROVED', status:'completed', created_at:'2026-06-25T22:11:00Z' },
-    { verification_id:'550e8400-e29b-41d4-a716-446655440005', email:'bob@gmail.com', risk_score:20, decision:'APPROVED', status:'completed', created_at:'2026-06-25T20:00:00Z' },
-  ],
-  rules: [
-    { id:'r1', rule_name:'disposable_email', rule_type:'email', description:'Email domain is a known disposable provider', score_impact:25, is_active:true },
-    { id:'r2', rule_name:'invalid_pan_format', rule_type:'document', description:'PAN does not match [A-Z]{5}[0-9]{4}[A-Z]', score_impact:20, is_active:true },
-    { id:'r3', rule_name:'phone_reused', rule_type:'phone', description:'Phone number was seen in a previous verification', score_impact:15, is_active:true },
-    { id:'r4', rule_name:'blacklisted_device', rule_type:'device', description:'Device ID is on the blacklist', score_impact:30, is_active:true },
-    { id:'r5', rule_name:'high_velocity', rule_type:'velocity', description:'Too many verifications from the same IP', score_impact:25, is_active:true },
-    { id:'r6', rule_name:'country_mismatch', rule_type:'geo', description:'IP country does not match phone country code', score_impact:15, is_active:false },
-  ],
-  keys: [
-    { id:'k1', name:'Production Key', key_prefix:'vt_live_xKzA', is_active:true, last_used_at:'2026-06-26T09:00:00Z', created_at:'2026-06-01T10:00:00Z' },
-    { id:'k2', name:'Testing Key', key_prefix:'vt_live_mN9P', is_active:true, last_used_at:null, created_at:'2026-06-10T12:00:00Z' },
-  ],
-  audit: [
-    { id:'a1', action:'auth.login', actor_email:'admin@acme.com', endpoint:'/api/v1/auth/login', method:'POST', status:'success', ip_address:'127.0.0.1', created_at:'2026-06-26T09:42:00Z' },
-    { id:'a2', action:'verification.completed', actor_email:'system', endpoint:'/api/v1/verify', method:'POST', status:'success', ip_address:'103.44.1.1', created_at:'2026-06-26T08:22:11Z' },
-    { id:'a3', action:'apikey.created', actor_email:'admin@acme.com', endpoint:'/api/v1/apikeys', method:'POST', status:'success', ip_address:'127.0.0.1', created_at:'2026-06-25T14:00:00Z' },
-    { id:'a4', action:'auth.login', actor_email:'dev@acme.com', endpoint:'/api/v1/auth/login', method:'POST', status:'error', ip_address:'45.67.89.10', created_at:'2026-06-24T11:30:00Z' },
-  ],
+  stats: { total_verifications:0, approved_count:0, review_count:0, rejected_count:0,
+           approval_rate:0, average_risk_score:0, api_keys_active:0, total_members:0 },
+  history: [],
+  rules: [],
+  keys: [],
+  audit: [],
   analytics: {
-    data: [
-      {date:'Jun 20',total:89,approved:74,review:10,rejected:5,avg_risk_score:18},
-      {date:'Jun 21',total:102,approved:85,review:12,rejected:5,avg_risk_score:20},
-      {date:'Jun 22',total:95,approved:78,review:11,rejected:6,avg_risk_score:22},
-      {date:'Jun 23',total:118,approved:98,review:14,rejected:6,avg_risk_score:19},
-      {date:'Jun 24',total:134,approved:112,review:16,rejected:6,avg_risk_score:17},
-      {date:'Jun 25',total:127,approved:105,review:15,rejected:7,avg_risk_score:21},
-      {date:'Jun 26',total:98,approved:81,review:12,rejected:5,avg_risk_score:23},
-    ]
+    data: []
   }
 };
 
@@ -2652,28 +2623,6 @@ function renderSettings() {
               </div>
               <div class="rule-toggle on"></div>
             </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-title" style="margin-bottom:16px;">🏗️ Infrastructure</div>
-          ${[
-            ['PostgreSQL', 'postgres:5432', apiAvailable],
-            ['Redis', 'redis:6379', apiAvailable],
-            ['LocalStack (S3)', 'localhost:4566', false],
-            ['Mailpit', 'localhost:8025', false],
-            ['Celery Worker', 'worker:5555', apiAvailable],
-          ].map(([name, addr, ok]) => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
-              <div>
-                <div class="text-sm" style="font-weight:500;">${name}</div>
-                <div class="text-xs text-muted font-mono">${addr}</div>
-              </div>
-              <div class="status-dot" style="${ok?'':'background:var(--warning);box-shadow:0 0 6px var(--warning);'}"></div>
-            </div>
-          `).join('')}
-          <div style="margin-top:14px;font-size:12px;color:var(--text-muted);">
-            Run <code style="background:var(--bg-elevated);padding:2px 6px;border-radius:4px;font-family:monospace;">docker compose up</code> to start all services
           </div>
         </div>
       </div>

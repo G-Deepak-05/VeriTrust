@@ -52,6 +52,7 @@ def create_app() -> FastAPI:
         title="VeriTrust API",
         description=(
             "Open Source Identity Verification & Fraud Intelligence Platform.\n\n"
+            "GitHub Repository: [G-Deepak-05/VeriTrust](https://github.com/G-Deepak-05/VeriTrust)\n\n"
             "## Authentication\n"
             "- Use `POST /api/v1/auth/login` to get a JWT access token.\n"
             "- Add `Authorization: Bearer <token>` to protected endpoints.\n"
@@ -64,7 +65,7 @@ def create_app() -> FastAPI:
         redoc_url="/redoc",
         openapi_url="/openapi.json",
         lifespan=lifespan,
-        contact={"name": "VeriTrust", "url": "https://github.com/veritrust"},
+        contact={"name": "VeriTrust GitHub Repository", "url": "https://github.com/G-Deepak-05/VeriTrust"},
         license_info={"name": "MIT"},
     )
 
